@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/infinimesh/infinimesh/operator/pkg/controller/platform"
+	"github.com/infinimesh/operator/pkg/controller/platform"
 )
 
 func init() {

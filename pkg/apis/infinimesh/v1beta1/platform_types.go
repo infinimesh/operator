@@ -29,6 +29,10 @@ type PlatformSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
+type PlatformKafka struct {
+	BootstrapServers string `json:"bootstrapServers,omitempty" protobuf:"bytes,1,name=bootstrapServers"`
+}
+
 // PlatformStatus defines the observed state of Platform
 type PlatformStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster

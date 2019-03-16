@@ -38,7 +38,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	infinimeshv1beta1 "github.com/infinimesh/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
+	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
 
 var log = logf.Log.WithName("controller")
@@ -83,6 +83,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &infinimeshv1beta1.Platform{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -100,11 +108,12 @@ type ReconcilePlatform struct {
 // a Deployment as an example
 // Automatically generate RBAC rules to allow the Controller to read and write Deployments
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=infinimesh.infinimesh.io,resources=platforms,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infinimesh.infinimesh.io,resources=platforms/status,verbs=get;update;patch
 func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	fmt.Println("reconcile")
+	fmt.Println("reconcileroni")
 	// Fetch the Platform instance
 	instance := &infinimeshv1beta1.Platform{}
 	err := r.Get(context.TODO(), request.NamespacedName, instance)
@@ -194,13 +203,15 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		}
 	}
 
+	fmt.Println("SVC")
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name + "-mqtt-bridge",
 			Namespace: instance.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeLoadBalancer,
+			// Type: corev1.ServiceTypeLoadBalancer,
+			Type: corev1.ServiceTypeClusterIP,
 			Ports: []corev1.ServicePort{
 				{
 					Protocol:   corev1.ProtocolTCP,
@@ -210,6 +221,10 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 			},
 		},
 	}
+	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// TODO support for google cloud to write IP into cloudDNS
 
 	foundSvc := &corev1.Service{}

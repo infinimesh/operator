@@ -17,7 +17,7 @@ limitations under the License.
 package apis
 
 import (
-	"github.com/infinimesh/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
+	"github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
 
 func init() {

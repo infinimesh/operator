@@ -23,7 +23,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/infinimesh/infinimesh/operator/pkg/apis"
+	"github.com/infinimesh/operator/pkg/apis"
 	"github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
