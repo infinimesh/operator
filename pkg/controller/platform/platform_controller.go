@@ -18,7 +18,6 @@ package platform
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -113,7 +112,6 @@ type ReconcilePlatform struct {
 // +kubebuilder:rbac:groups=infinimesh.infinimesh.io,resources=platforms,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infinimesh.infinimesh.io,resources=platforms/status,verbs=get;update;patch
 func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	fmt.Println("reconcileroni")
 	// Fetch the Platform instance
 	instance := &infinimeshv1beta1.Platform{}
 	err := r.Get(context.TODO(), request.NamespacedName, instance)
@@ -156,7 +154,7 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 							Env: []corev1.EnvVar{
 								{
 									Name:  "KAFKA_HOST",
-									Value: "infinimesh-saas-kafka-bootstrap.kafka.svc.cluster.local:9092", // TODO make it configurable to bring own kafka or let infinimesh instantiate one via strimzi
+									Value: instance.Spec.Kafka.BootstrapServers, // TODO make it configurable to bring own kafka or let infinimesh instantiate one via strimzi
 								},
 							},
 						},
@@ -203,7 +201,6 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		}
 	}
 
-	fmt.Println("SVC")
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name + "-mqtt-bridge",

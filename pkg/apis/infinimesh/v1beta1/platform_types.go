@@ -25,6 +25,7 @@ import (
 
 // PlatformSpec defines the desired state of Platform
 type PlatformSpec struct {
+	Kafka PlatformKafka `json:"kafka,omitempty" protobuf:"bytes,1,name=kafka"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
