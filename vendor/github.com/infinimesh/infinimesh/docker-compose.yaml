@@ -1,0 +1,160 @@
+version: "3.2"
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    restart: unless-stopped
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  database:
+    image: cockroachdb/cockroach:latest
+    command: start --insecure
+    ports:
+      - "8093:8080"
+      - "26257:26257"
+    restart: unless-stopped
+  mqtt-bridge:
+    image: quay.io/infinimesh/mqtt-bridge:latest
+    ports:
+      - "8089:8089"
+    volumes:
+      - $PWD/hack/server.crt:/cert/tls.crt
+      - $PWD/hack/server.key:/cert/tls.key
+    environment:
+      - KAFKA_HOST=kafka:29092
+      - DEVICE_REGISTRY_URL=device-registry:8080
+    depends_on:
+      - kafka
+    restart: unless-stopped
+  telemetry-router:
+    image: quay.io/infinimesh/telemetry-router:latest
+    environment:
+      - KAFKA_HOST=kafka:29092
+    depends_on:
+      - kafka
+    restart: unless-stopped
+  device-registry:
+    image: quay.io/infinimesh/device-registry:latest
+    ports:
+      - "8070:8080"
+    depends_on:
+      - database
+    environment:
+      - DGRAPH_HOST=server:9080
+      - DB_ADDR=postgresql://root@database:26257/postgres?sslmode=disable
+    restart: unless-stopped
+  shadow-delta-merger:
+    image: quay.io/infinimesh/shadow-delta-merger:latest
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_HOST=kafka:29092
+    restart: unless-stopped
+  shadow-api:
+    image: quay.io/infinimesh/shadow-api:latest
+    ports:
+      - "8096:8096"
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_HOST=kafka:29092
+      - DB_ADDR=postgresql://root@database:26257/postgres?sslmode=disable
+    restart: unless-stopped
+  shadow-persister:
+    image: quay.io/infinimesh/shadow-persister:latest
+    depends_on:
+      - kafka
+      - database
+    environment:
+      - KAFKA_HOST=kafka:29092
+      - DB_ADDR=postgresql://root@database:26257/postgres?sslmode=disable
+    restart: unless-stopped
+  apiserver:
+    ports:
+      - "8080:8080"
+    image: quay.io/infinimesh/apiserver:latest
+    environment:
+      - JWT_SIGNING_KEY=c3VwZXIgc2VjcmV0IGtleQo=
+    depends_on:
+      - device-registry
+      - shadow-api
+      - nodeserver
+    restart: unless-stopped
+  apiserver-rest:
+    image: quay.io/infinimesh/apiserver-rest:latest
+    environment:
+      - APISERVER_ENDPOINT=apiserver:8080
+    ports:
+      - "8081:8081"
+    depends_on:
+      - apiserver
+    restart: unless-stopped
+  controlplane-ui:
+    image: quay.io/infinimesh/controlplane-ui:latest
+    environment:
+      - APISERVER_URL=http://localhost:8081
+    ports:
+      - "8090:80"
+    depends_on:
+      - apiserver-rest
+  nodeserver:
+    image: quay.io/infinimesh/nodeserver:latest
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      - DGRAPH_HOST=server:9080
+  # dgraph
+  zero:
+    image: dgraph/dgraph:v1.0.12-rc5
+    volumes:
+      - type: volume
+        source: dgraph
+        target: /dgraph
+        volume:
+          nocopy: true
+    ports:
+      - 5080:5080
+      - 6080:6080
+    restart: on-failure
+    command: dgraph zero --my=zero:5080
+  server:
+    image: dgraph/dgraph:v1.0.12-rc5
+    volumes:
+      - type: volume
+        source: dgraph
+        target: /dgraph
+        volume:
+          nocopy: true
+    ports:
+      - 8084:8080
+      - 9080:9080
+    restart: on-failure
+    command: dgraph alpha --my=server:7080 --lru_mb=2048 --zero=zero:5080
+  ratel:
+    image: dgraph/dgraph:v1.0.12-rc5
+    volumes:
+      - type: volume
+        source: dgraph
+        target: /dgraph
+        volume:
+          nocopy: true
+    ports:
+      - 8000:8000
+    command: dgraph-ratel
+
+volumes:
+  dgraph:

@@ -1,0 +1,180 @@
+syntax = "proto3";
+
+package infinimesh.api;
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  host : "api.infinimesh.io"
+  info : {
+    title : "Infinimesh IoT Platform"
+    description : "Cloud Native IoT Platform"
+    version : "0.0.1"
+    contact : {
+      name : "Infinimesh"
+      url : "http://infinimesh.io"
+      email : "joe@infinimesh.io"
+    }
+  }
+  schemes : HTTPS
+  consumes : "application/json"
+  produces : "application/json"
+};
+option go_package = "apipb";
+option java_multiple_files = true;
+option java_outer_classname = "ApiProto";
+option java_package = "com.infinimesh.api";
+
+import "google/api/annotations.proto";
+import "google/protobuf/wrappers.proto";
+import "pkg/node/nodepb/namespace.proto";
+import "pkg/node/nodepb/node.proto";
+import "pkg/registry/registrypb/device_registry.proto";
+import "pkg/shadow/shadowpb/shadow.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+message TokenRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message TokenResponse { string token = 1; }
+
+message ListDevicesRequest {
+  string namespace = 1;
+}
+
+service Devices {
+  rpc Create(infinimesh.deviceregistry.CreateRequest)
+      returns (infinimesh.deviceregistry.CreateResponse) {
+    option (google.api.http) = {
+      post : "/devices"
+      body : "*"
+    };
+  }
+  rpc Update(infinimesh.deviceregistry.UpdateRequest)
+      returns (infinimesh.deviceregistry.UpdateResponse) {
+    option (google.api.http) = {
+      patch : "/devices/{device.id}"
+      body : "device"
+    };
+  }
+  rpc Get(infinimesh.deviceregistry.GetRequest)
+      returns (infinimesh.deviceregistry.GetResponse) {
+    option (google.api.http) = {
+      get : "/devices/{id}"
+    };
+  }
+  rpc List(ListDevicesRequest)
+      returns (infinimesh.deviceregistry.ListResponse) {
+    option (google.api.http) = {
+      get : "/devices"
+    };
+  }
+  rpc Delete(infinimesh.deviceregistry.DeleteRequest)
+      returns (infinimesh.deviceregistry.DeleteResponse) {
+    option (google.api.http) = {
+      delete : "/devices/{id}"
+    };
+  }
+}
+
+service Shadows {
+  rpc Get(infinimesh.shadow.GetRequest)
+      returns (infinimesh.shadow.GetResponse) {
+    option (google.api.http) = {
+      get : "/twins/{id}"
+    };
+  }
+  rpc PatchDesiredState(infinimesh.shadow.PatchDesiredStateRequest)
+      returns (infinimesh.shadow.PatchDesiredStateResponse) {
+    option (google.api.http) = {
+      patch : "/twins/{id}"
+      body : "data"
+    };
+  }
+  rpc StreamReportedStateChanges(
+      infinimesh.shadow.StreamReportedStateChangesRequest)
+      returns (stream infinimesh.shadow.StreamReportedStateChangesResponse) {
+    option (google.api.http) = {
+      get : "/twins/{id}/stream"
+    };
+  }
+}
+
+service Accounts {
+  rpc Token(TokenRequest) returns (TokenResponse) {
+    option (google.api.http) = {
+      post : "/accounts/token"
+      body : "*"
+    };
+  }
+  rpc CreateUserAccount(infinimesh.node.CreateUserAccountRequest)
+      returns (infinimesh.node.CreateUserAccountResponse) {
+    option (google.api.http) = {
+      post : "/accounts/users"
+      body : "*";
+  };
+};
+  rpc ListAccounts(infinimesh.node.ListAccountsRequest)
+      returns (infinimesh.node.ListAccountsResponse) {
+    option (google.api.http) = {
+      get : "/accounts/users"
+    };
+  };
+}
+
+message ListObjectsRequest {
+  string namespace = 1;
+  bool recurse = 2;
+}
+
+message CreateObjectRequest {
+  google.protobuf.StringValue parent = 1;
+  string namespace = 2;
+  infinimesh.node.Object object = 3;
+}
+
+// Object
+service Objects {
+  rpc ListObjects(ListObjectsRequest)
+      returns (infinimesh.node.ListObjectsResponse) {
+    option (google.api.http) = {
+      get : "/objects"
+    };
+  }
+  rpc CreateObject(infinimesh.api.CreateObjectRequest)
+      returns (infinimesh.node.Object) {
+    option (google.api.http) = {
+      post : "/objects"
+      body : "*"
+    };
+  }
+  rpc DeleteObject(infinimesh.node.DeleteObjectRequest)
+      returns (infinimesh.node.DeleteObjectResponse) {
+    option (google.api.http) = {
+      delete : "/objects/{uid}"
+    };
+  }
+}
+
+service Namespaces {
+  rpc CreateNamespace(infinimesh.node.CreateNamespaceRequest)
+      returns (infinimesh.node.Namespace) {
+    option (google.api.http) = {
+      post : "/namespaces"
+      body : "*"
+    };
+  };
+
+  rpc GetNamespace(infinimesh.node.GetNamespaceRequest)
+      returns (infinimesh.node.Namespace) {
+    option (google.api.http) = {
+      get : "/namespaces/{namespace}"
+    };
+  };
+  rpc ListNamespaces(infinimesh.node.ListNamespacesRequest)
+      returns (infinimesh.node.ListNamespacesResponse) {
+    option (google.api.http) = {
+      get : "/namespaces"
+    };
+  };
+}

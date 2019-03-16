@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package infinimesh.shadow;
+option go_package = "shadowpb";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+message VersionedValue {
+  uint64 version = 1;
+  google.protobuf.Value data = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+message GetRequest {
+  string id = 1;
+  string namespace = 2;
+}
+
+message GetResponse { Shadow shadow = 1; }
+
+message Shadow {
+  VersionedValue config = 2;
+  VersionedValue reported = 3;
+  VersionedValue desired = 4;
+}
+
+message PatchDesiredStateRequest {
+  string id = 1;
+  google.protobuf.Value data = 2;
+}
+message PatchDesiredStateResponse {}
+
+message StreamReportedStateChangesRequest {
+  string id = 1;
+}
+
+message StreamReportedStateChangesResponse { VersionedValue reportedDelta = 1; }
+
+service Shadows {
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc PatchDesiredState(PatchDesiredStateRequest)
+      returns (PatchDesiredStateResponse);
+  rpc StreamReportedStateChanges(StreamReportedStateChangesRequest)
+      returns (stream StreamReportedStateChangesResponse);
+}
