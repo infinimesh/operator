@@ -101,10 +101,8 @@ type ReconcilePlatform struct {
 	scheme *runtime.Scheme
 }
 
-func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
-	deploymentName := instance.Name + "-mqtt-bridge"
-	// TODO(user): Change this to be the object type created by your controller
-	// Define the desired Deployment object
+func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
+	deploymentName := instance.Name + "-device-registry"
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
@@ -119,29 +117,13 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:            "mqtt-bridge",
-							Image:           "quay.io/infinimesh/mqtt-bridge:latest",
+							Name:            "device-registry",
+							Image:           "quay.io/infinimesh/device-registry:latest",
 							ImagePullPolicy: corev1.PullAlways,
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      "cert",
-									MountPath: "/cert",
-								},
-							},
 							Env: []corev1.EnvVar{
 								{
-									Name:  "KAFKA_HOST",
-									Value: instance.Spec.Kafka.BootstrapServers, // TODO make it configurable to bring own kafka or let infinimesh instantiate one via strimzi
-								},
-							},
-						},
-					},
-					Volumes: []corev1.Volume{
-						{
-							Name: "cert",
-							VolumeSource: corev1.VolumeSource{
-								Secret: &corev1.SecretVolumeSource{
-									SecretName: "api-infinimesh-io-tls", // TODO make this configurable in the CRD
+									Name:  "DGRAPH_HOST",
+									Value: "localhost:9080", // TODO
 								},
 							},
 						},
@@ -180,7 +162,133 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      instance.Name + "-mqtt-bridge",
+			Name:      deploymentName,
+			Namespace: instance.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			// Type: corev1.ServiceTypeLoadBalancer,
+			Type: corev1.ServiceTypeClusterIP,
+			Ports: []corev1.ServicePort{
+				{
+					Protocol:   corev1.ProtocolTCP,
+					Port:       8080,
+					TargetPort: intstr.FromInt(8080),
+				},
+			},
+		},
+	}
+	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
+		return err
+	}
+
+	// TODO support for google cloud to write IP into cloudDNS
+
+	foundSvc := &corev1.Service{}
+	err = r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, foundSvc)
+	if err != nil && errors.IsNotFound(err) {
+		log.Info("Create svc")
+		svc.Spec.Selector = map[string]string{"deployment": deploymentName}
+		err = r.Create(context.TODO(), svc)
+		return err
+	} else if err != nil {
+		return err
+	}
+
+	// TODO(user): Change this for the object type created by your controller
+	// Update the found object and write the result back if there are any changes
+	if !reflect.DeepEqual(svc.Spec, foundSvc.Spec) {
+		foundSvc.Spec.Ports = svc.Spec.Ports
+		log.Info("Updating SVC", "namespace", svc.Namespace, "name", svc.Name)
+		err = r.Update(context.TODO(), foundSvc)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+
+}
+
+func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
+	deploymentName := instance.Name + "-mqtt-bridge"
+	// TODO(user): Change this to be the object type created by your controller
+	// Define the desired Deployment object
+
+	deploy := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName,
+			Namespace: instance.Namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deployment": deploymentName},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"deployment": deploymentName}},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:            "mqtt-bridge",
+							Image:           "quay.io/infinimesh/mqtt-bridge:latest",
+							ImagePullPolicy: corev1.PullAlways,
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "cert",
+									MountPath: "/cert",
+								},
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "KAFKA_HOST",
+									Value: instance.Spec.Kafka.BootstrapServers,
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "cert",
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: instance.Spec.MQTT.SecretName, // TODO make this configurable in the CRD
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(instance, deploy, r.scheme); err != nil {
+		return err
+	}
+
+	// TODO(user): Change this for the object type created by your controller
+	// Check if the Deployment already exists
+	found := &appsv1.Deployment{}
+	err := r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, found)
+	if err != nil && errors.IsNotFound(err) {
+		log.Info("Creating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
+		err = r.Create(context.TODO(), deploy)
+		return err
+	} else if err != nil {
+		return err
+	}
+
+	// TODO(user): Change this for the object type created by your controller
+	// Update the found object and write the result back if there are any changes
+	if !reflect.DeepEqual(deploy.Spec, found.Spec) {
+		found.Spec = deploy.Spec
+		log.Info("Updating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
+		err = r.Update(context.TODO(), found)
+		if err != nil {
+			return err
+		}
+	}
+
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName,
 			Namespace: instance.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
@@ -250,7 +358,12 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileMqtt(request, instance)
+	if err := r.reconcileMqtt(request, instance); err != nil {
+		return reconcile.Result{}, err
+	}
+	if err := r.reconcileRegistry(request, instance); err != nil {
+		return reconcile.Result{}, err
+	}
 
 	return reconcile.Result{}, nil
 }

@@ -25,13 +25,18 @@ import (
 
 // PlatformSpec defines the desired state of Platform
 type PlatformSpec struct {
-	Kafka PlatformKafka `json:"kafka,omitempty" protobuf:"bytes,1,name=kafka"`
+	MQTT  PlatformMQTTBroker `json:"mqtt,omitempty" protobuf:"bytes,1,name=mqtt"`
+	Kafka PlatformKafka      `json:"kafka,omitempty" protobuf:"bytes,1,name=kafka"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
 type PlatformKafka struct {
 	BootstrapServers string `json:"bootstrapServers,omitempty" protobuf:"bytes,1,name=bootstrapServers"`
+}
+
+type PlatformMQTTBroker struct {
+	SecretName string `json:"secretName,omitempty" protobuf:"bytes,1,name=secretName"`
 }
 
 // PlatformStatus defines the observed state of Platform

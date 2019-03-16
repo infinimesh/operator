@@ -7,3 +7,5 @@ metadata:
 spec:
   kafka:
     bootstrapServers: "infinimesh-saas-kafka-bootstrap.kafka.svc.cluster.local:9092"
+  mqtt:
+    secretName: "api-infinimesh-io-tls"
