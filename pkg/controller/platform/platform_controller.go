@@ -101,30 +101,7 @@ type ReconcilePlatform struct {
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a Platform object and makes changes based on the state read
-// and what is in the Platform.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  The scaffolding writes
-// a Deployment as an example
-// Automatically generate RBAC rules to allow the Controller to read and write Deployments
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=infinimesh.infinimesh.io,resources=platforms,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=infinimesh.infinimesh.io,resources=platforms/status,verbs=get;update;patch
-func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	// Fetch the Platform instance
-	instance := &infinimeshv1beta1.Platform{}
-	err := r.Get(context.TODO(), request.NamespacedName, instance)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Object not found, return.  Created objects are automatically garbage collected.
-			// For additional cleanup logic use finalizers.
-			return reconcile.Result{}, nil
-		}
-		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
-	}
-
+func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	deploymentName := instance.Name + "-mqtt-bridge"
 	// TODO(user): Change this to be the object type created by your controller
 	// Define the desired Deployment object
@@ -175,19 +152,19 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 	}
 
 	if err := controllerutil.SetControllerReference(instance, deploy, r.scheme); err != nil {
-		return reconcile.Result{}, err
+		return err
 	}
 
 	// TODO(user): Change this for the object type created by your controller
 	// Check if the Deployment already exists
 	found := &appsv1.Deployment{}
-	err = r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, found)
+	err := r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		log.Info("Creating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
 		err = r.Create(context.TODO(), deploy)
-		return reconcile.Result{}, err
+		return err
 	} else if err != nil {
-		return reconcile.Result{}, err
+		return err
 	}
 
 	// TODO(user): Change this for the object type created by your controller
@@ -197,7 +174,7 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		log.Info("Updating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
 		err = r.Update(context.TODO(), found)
 		if err != nil {
-			return reconcile.Result{}, err
+			return err
 		}
 	}
 
@@ -219,7 +196,7 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		},
 	}
 	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
-		return reconcile.Result{}, err
+		return err
 	}
 
 	// TODO support for google cloud to write IP into cloudDNS
@@ -230,9 +207,9 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		log.Info("Create svc")
 		svc.Spec.Selector = map[string]string{"deployment": deploymentName}
 		err = r.Create(context.TODO(), svc)
-		return reconcile.Result{}, err
+		return err
 	} else if err != nil {
-		return reconcile.Result{}, err
+		return err
 	}
 
 	// TODO(user): Change this for the object type created by your controller
@@ -242,9 +219,38 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		log.Info("Updating SVC", "namespace", svc.Namespace, "name", svc.Name)
 		err = r.Update(context.TODO(), foundSvc)
 		if err != nil {
-			return reconcile.Result{}, err
+			return err
 		}
 	}
+	return nil
+}
+
+// Reconcile reads that state of the cluster for a Platform object and makes changes based on the state read
+// and what is in the Platform.Spec
+// TODO(user): Modify this Reconcile function to implement your Controller logic.  The scaffolding writes
+// a Deployment as an example
+// Automatically generate RBAC rules to allow the Controller to read and write Deployments
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=infinimesh.infinimesh.io,resources=platforms,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=infinimesh.infinimesh.io,resources=platforms/status,verbs=get;update;patch
+func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	// Fetch the Platform instance
+	instance := &infinimeshv1beta1.Platform{}
+
+	err := r.Get(context.TODO(), request.NamespacedName, instance)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Object not found, return.  Created objects are automatically garbage collected.
+			// For additional cleanup logic use finalizers.
+			return reconcile.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
+	}
+
+	r.reconcileMqtt(request, instance)
 
 	return reconcile.Result{}, nil
 }
