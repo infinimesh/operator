@@ -39,7 +39,7 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 							Env: []corev1.EnvVar{
 								{
 									Name:  "DGRAPH_HOST",
-									Value: "localhost:9080", // TODO
+									Value: instance.Name + "-dgraph-alpha:9080", // TODO
 								},
 							},
 						},
