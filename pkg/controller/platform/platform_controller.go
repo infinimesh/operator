@@ -40,7 +40,7 @@ import (
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
 
-var log = logf.Log.WithName("controller")
+var logger = logf.Log.WithName("controller")
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
@@ -102,6 +102,7 @@ type ReconcilePlatform struct {
 }
 
 func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
+	log := logger.WithName("device-registry")
 	deploymentName := instance.Name + "-device-registry"
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -137,27 +138,26 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 		return err
 	}
 
-	// TODO(user): Change this for the object type created by your controller
-	// Check if the Deployment already exists
 	found := &appsv1.Deployment{}
 	err := r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		log.Info("Creating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
 		err = r.Create(context.TODO(), deploy)
-		return err
-	} else if err != nil {
-		return err
-	}
-
-	// TODO(user): Change this for the object type created by your controller
-	// Update the found object and write the result back if there are any changes
-	if !reflect.DeepEqual(deploy.Spec, found.Spec) {
-		found.Spec = deploy.Spec
-		log.Info("Updating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
-		err = r.Update(context.TODO(), found)
 		if err != nil {
 			return err
 		}
+	} else if err != nil {
+		return err
+	} else {
+		if !reflect.DeepEqual(deploy.Spec, found.Spec) {
+			found.Spec = deploy.Spec
+			log.Info("Updating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
+			err = r.Update(context.TODO(), found)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 
 	svc := &corev1.Service{
@@ -166,8 +166,8 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 			Namespace: instance.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
-			// Type: corev1.ServiceTypeLoadBalancer,
-			Type: corev1.ServiceTypeClusterIP,
+			Selector: map[string]string{"deployment": deploymentName},
+			Type:     corev1.ServiceTypeClusterIP,
 			Ports: []corev1.ServicePort{
 				{
 					Protocol:   corev1.ProtocolTCP,
@@ -181,34 +181,23 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 		return err
 	}
 
-	// TODO support for google cloud to write IP into cloudDNS
-
 	foundSvc := &corev1.Service{}
 	err = r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, foundSvc)
 	if err != nil && errors.IsNotFound(err) {
-		log.Info("Create svc")
-		svc.Spec.Selector = map[string]string{"deployment": deploymentName}
 		err = r.Create(context.TODO(), svc)
-		return err
+		if err != nil {
+			return err
+		}
 	} else if err != nil {
 		return err
 	}
 
-	// TODO(user): Change this for the object type created by your controller
-	// Update the found object and write the result back if there are any changes
-	if !reflect.DeepEqual(svc.Spec, foundSvc.Spec) {
-		foundSvc.Spec.Ports = svc.Spec.Ports
-		log.Info("Updating SVC", "namespace", svc.Namespace, "name", svc.Name)
-		err = r.Update(context.TODO(), foundSvc)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 
 }
 
 func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
+	log := logger.WithName("mqtt-bridge")
 	deploymentName := instance.Name + "-mqtt-bridge"
 	// TODO(user): Change this to be the object type created by your controller
 	// Define the desired Deployment object
@@ -241,6 +230,10 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 									Name:  "KAFKA_HOST",
 									Value: instance.Spec.Kafka.BootstrapServers,
 								},
+								{
+									Name:  "DEVICE_REGISTRY_URL",
+									Value: request.Name + "-device-registry:8080",
+								},
 							},
 						},
 					},
@@ -263,37 +256,39 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 		return err
 	}
 
-	// TODO(user): Change this for the object type created by your controller
-	// Check if the Deployment already exists
 	found := &appsv1.Deployment{}
 	err := r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		log.Info("Creating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
 		err = r.Create(context.TODO(), deploy)
-		return err
-	} else if err != nil {
-		return err
-	}
-
-	// TODO(user): Change this for the object type created by your controller
-	// Update the found object and write the result back if there are any changes
-	if !reflect.DeepEqual(deploy.Spec, found.Spec) {
-		found.Spec = deploy.Spec
-		log.Info("Updating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
-		err = r.Update(context.TODO(), found)
 		if err != nil {
 			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		if !reflect.DeepEqual(deploy.Spec, found.Spec) {
+			found.Spec = deploy.Spec
+			log.Info("Updating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
+			err = r.Update(context.TODO(), found)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	svc := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
 			Namespace: instance.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
-			// Type: corev1.ServiceTypeLoadBalancer,
-			Type: corev1.ServiceTypeClusterIP,
+			Selector: map[string]string{"deployment": deploymentName},
+			Type:     corev1.ServiceTypeLoadBalancer,
 			Ports: []corev1.ServicePort{
 				{
 					Protocol:   corev1.ProtocolTCP,
@@ -307,29 +302,17 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 		return err
 	}
 
-	// TODO support for google cloud to write IP into cloudDNS
-
 	foundSvc := &corev1.Service{}
 	err = r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, foundSvc)
 	if err != nil && errors.IsNotFound(err) {
-		log.Info("Create svc")
-		svc.Spec.Selector = map[string]string{"deployment": deploymentName}
 		err = r.Create(context.TODO(), svc)
-		return err
+		if err != nil {
+			return err
+		}
 	} else if err != nil {
 		return err
 	}
 
-	// TODO(user): Change this for the object type created by your controller
-	// Update the found object and write the result back if there are any changes
-	if !reflect.DeepEqual(svc.Spec, foundSvc.Spec) {
-		foundSvc.Spec.Ports = svc.Spec.Ports
-		log.Info("Updating SVC", "namespace", svc.Namespace, "name", svc.Name)
-		err = r.Update(context.TODO(), foundSvc)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
