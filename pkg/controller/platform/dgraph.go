@@ -2,7 +2,9 @@ package platform
 
 import (
 	"context"
+	"fmt"
 
+	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -12,6 +14,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/dgraph-io/dgo"
+	"github.com/dgraph-io/dgo/protos/api"
 
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
@@ -377,6 +382,34 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 	}
 
 	// TODO: install schema; then update status with that info
+	// TODO do this only if necessary
+	host := instance.Name + "-dgraph-alpha." + instance.Namespace + ".svc.cluster.local:9080"
+	fmt.Println("host", host)
+	conn, err := grpc.Dial(host, grpc.WithInsecure())
+	if err != nil {
+		fmt.Println("Failed to connect to dg", err)
+	}
+
+	dg := dgo.NewDgraphClient(api.NewDgraphClient(conn))
+
+	err = dg.Alter(context.Background(), &api.Operation{
+		Schema: `
+  tags: [string] .
+  name: string @index(exact) .
+  username: string @index(exact) .
+  action: string @index(term) .
+  type: string @index(exact) .
+  access.to: uid @reverse .
+  children: uid @reverse .
+  owns: uid @reverse .
+  kind: string @index(exact) .
+  has.credentials: uid @reverse .
+  fingerprint: string @index(exact) .
+  certificates: uid @reverse .
+  password: password .`,
+	})
+
+	fmt.Println("Called alter, res", err)
 
 	return nil
 }
