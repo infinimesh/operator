@@ -127,7 +127,12 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 	if err := r.reconcileMqtt(request, instance); err != nil {
 		return reconcile.Result{}, err
 	}
+
 	if err := r.reconcileRegistry(request, instance); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if err := r.reconcileApiserver(request, instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
