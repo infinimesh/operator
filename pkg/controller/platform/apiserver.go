@@ -103,6 +103,10 @@ func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instan
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{
+									Name:  "NODE_HOST",
+									Value: instance.Name + "-nodeserver:8080",
+								},
+								{
 									Name: "JWT_SIGNING_KEY",
 									ValueFrom: &corev1.EnvVarSource{
 										SecretKeyRef: &corev1.SecretKeySelector{
