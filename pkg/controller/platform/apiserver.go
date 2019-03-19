@@ -98,6 +98,14 @@ func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instan
 									Value: instance.Name + "-nodeserver:8080",
 								},
 								{
+									Name:  "REGISTRY_HOST",
+									Value: instance.Name + "-device-registry:8080",
+								},
+								{
+									Name:  "SHADOW_HOST",
+									Value: instance.Name + "-shadow-api:8080",
+								},
+								{
 									Name: "JWT_SIGNING_KEY",
 									ValueFrom: &corev1.EnvVarSource{
 										SecretKeyRef: &corev1.SecretKeySelector{
