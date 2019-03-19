@@ -71,15 +71,6 @@ func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instan
 		}
 	} else if err != nil {
 		return err
-	} else {
-		if !reflect.DeepEqual(secret.Data, foundSecret.Data) {
-			foundSecret.Data = secret.Data
-			log.Info("Updating secret", "namespace", secret.Namespace, "name", secret.Name)
-			err = r.Update(context.TODO(), foundSecret)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	// TODO create secret for JWT signing key. it's generated randomly - OR predefined if defined in CRD (TODO)
