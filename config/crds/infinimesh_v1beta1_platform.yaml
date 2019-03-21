@@ -28,6 +28,27 @@ spec:
           type: object
         spec:
           properties:
+            apiserver:
+              properties:
+                grpc:
+                  properties:
+                    host:
+                      type: string
+                    tls:
+                      items:
+                        type: object
+                      type: array
+                  type: object
+                restful:
+                  properties:
+                    host:
+                      type: string
+                    tls:
+                      items:
+                        type: object
+                      type: array
+                  type: object
+              type: object
             kafka:
               properties:
                 bootstrapServers:

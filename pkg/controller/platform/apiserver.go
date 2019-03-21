@@ -74,8 +74,6 @@ func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instan
 		return err
 	}
 
-	// TODO create secret for JWT signing key. it's generated randomly - OR predefined if defined in CRD (TODO)
-
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
@@ -189,15 +187,10 @@ func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instan
 			Namespace: instance.Namespace,
 		},
 		Spec: extensionsv1beta1.IngressSpec{
-			TLS: []extensionsv1beta1.IngressTLS{
-				{
-					Hosts:      []string{"api.infinimesh.io"},
-					SecretName: instance.Spec.Apiserver.SecretName,
-				},
-			},
+			TLS: instance.Spec.Apiserver.GRPC.TLS,
 			Rules: []extensionsv1beta1.IngressRule{
 				{
-					Host: "api.infinimesh.io",
+					Host: instance.Spec.Apiserver.GRPC.Host,
 					IngressRuleValue: extensionsv1beta1.IngressRuleValue{
 						HTTP: &extensionsv1beta1.HTTPIngressRuleValue{
 							Paths: []extensionsv1beta1.HTTPIngressPath{

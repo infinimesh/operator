@@ -112,21 +112,17 @@ func (r *ReconcilePlatform) reconcileApiserverRest(request reconcile.Request, in
 		return err
 	}
 
+	//TODO check if spec.apiserver.restful.tls exists
 	ingress := &extensionsv1beta1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
 			Namespace: instance.Namespace,
 		},
 		Spec: extensionsv1beta1.IngressSpec{
-			TLS: []extensionsv1beta1.IngressTLS{
-				{
-					Hosts:      []string{"api.infinimesh.io"},
-					SecretName: instance.Spec.Apiserver.SecretName,
-				},
-			},
+			TLS: instance.Spec.Apiserver.Restful.TLS,
 			Rules: []extensionsv1beta1.IngressRule{
 				{
-					Host: "api.infinimesh.io",
+					Host: instance.Spec.Apiserver.Restful.Host,
 					IngressRuleValue: extensionsv1beta1.IngressRuleValue{
 						HTTP: &extensionsv1beta1.HTTPIngressRuleValue{
 							Paths: []extensionsv1beta1.HTTPIngressPath{
