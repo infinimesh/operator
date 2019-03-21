@@ -7,6 +7,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -69,6 +70,72 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 		if !reflect.DeepEqual(deploy.Spec, found.Spec) {
 			found.Spec = deploy.Spec
 			log.Info("Updating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
+			err = r.Update(context.TODO(), found)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	deploymentName = instance.Name + "-twin-redis"
+
+	redisS := &appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName,
+			Namespace: instance.Namespace,
+		},
+		Spec: appsv1.StatefulSetSpec{
+			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{"deployment": deploymentName},
+						Name:   "redis-data",
+					},
+					Spec: corev1.PersistentVolumeClaimSpec{
+						AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("10Gi")},
+						},
+					},
+				},
+			},
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deployment": deploymentName},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"deployment": deploymentName}},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:            "redis",
+							Image:           "redis:latest",
+							ImagePullPolicy: corev1.PullAlways,
+							Env:             []corev1.EnvVar{},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(instance, redisS, r.scheme); err != nil {
+		return err
+	}
+
+	foundRedis := &appsv1.StatefulSet{}
+	err = r.Get(context.TODO(), types.NamespacedName{Name: redisS.Name, Namespace: redisS.Namespace}, found)
+	if err != nil && errors.IsNotFound(err) {
+		log.Info("Creating statefulset", "namespace", redisS.Namespace, "name", redisS.Name)
+		err = r.Create(context.TODO(), redisS)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		if !reflect.DeepEqual(redisS.Spec, found.Spec) {
+			foundRedis.Spec = redisS.Spec
+			log.Info("Updating statefulset", "namespace", redisS.Namespace, "name", redisS.Name)
 			err = r.Update(context.TODO(), found)
 			if err != nil {
 				return err
