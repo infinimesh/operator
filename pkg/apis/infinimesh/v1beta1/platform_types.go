@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -25,10 +26,26 @@ import (
 
 // PlatformSpec defines the desired state of Platform
 type PlatformSpec struct {
-	MQTT  PlatformMQTTBroker `json:"mqtt,omitempty" protobuf:"bytes,1,name=mqtt"`
-	Kafka PlatformKafka      `json:"kafka,omitempty" protobuf:"bytes,1,name=kafka"`
+	MQTT      PlatformMQTTBroker `json:"mqtt,omitempty" protobuf:"bytes,1,name=mqtt"`
+	Kafka     PlatformKafka      `json:"kafka,omitempty" protobuf:"bytes,2,name=kafka"`
+	Apiserver PlatformApiserver  `json:"apiserver,omitempty" protobuf:"bytes,3,name=apiserver"`
+
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+}
+
+type PlatformApiserver struct {
+	GRPC    PlatformGRPCApiserver    `json:"grpc,omitempty" protobuf:"bytes,1,name=grpc"`
+	Restful PlatformRestfulApiserver `json:"restful,omitempty" protobuf:"bytes,2,name=restful"`
+}
+
+type PlatformRestfulApiserver struct {
+	Host string                         `json:"host,omitempty" protobuf:"bytes,1,name=host"`
+	TLS  []extensionsv1beta1.IngressTLS `json:"tls,omitempty" protobuf:"bytes,2,name=tls"`
+}
+type PlatformGRPCApiserver struct {
+	Host string                         `json:"host,omitempty" protobuf:"bytes,1,name=host"`
+	TLS  []extensionsv1beta1.IngressTLS `json:"tls,omitempty" protobuf:"bytes,2,name=tls"`
 }
 
 type PlatformKafka struct {

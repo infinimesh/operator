@@ -7,6 +7,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -175,6 +176,53 @@ func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instan
 	err = r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, foundSvc)
 	if err != nil && errors.IsNotFound(err) {
 		err = r.Create(context.TODO(), svc)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	ingress := &extensionsv1beta1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName,
+			Namespace: instance.Namespace,
+		},
+		Spec: extensionsv1beta1.IngressSpec{
+			TLS: []extensionsv1beta1.IngressTLS{
+				{
+					Hosts:      []string{"api.infinimesh.io"},
+					SecretName: instance.Spec.Apiserver.SecretName,
+				},
+			},
+			Rules: []extensionsv1beta1.IngressRule{
+				{
+					Host: "api.infinimesh.io",
+					IngressRuleValue: extensionsv1beta1.IngressRuleValue{
+						HTTP: &extensionsv1beta1.HTTPIngressRuleValue{
+							Paths: []extensionsv1beta1.HTTPIngressPath{
+								{
+									Backend: extensionsv1beta1.IngressBackend{
+										ServiceName: instance.Name + "-apiserver-rest",
+										ServicePort: intstr.FromInt(8080),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(instance, ingress, r.scheme); err != nil {
+		return err
+	}
+
+	foundIngress := &extensionsv1beta1.Ingress{}
+	err = r.Get(context.TODO(), types.NamespacedName{Name: ingress.Name, Namespace: ingress.Namespace}, foundIngress)
+	if err != nil && errors.IsNotFound(err) {
+		err = r.Create(context.TODO(), ingress)
 		if err != nil {
 			return err
 		}
