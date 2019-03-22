@@ -17,8 +17,8 @@ spec:
           - "api.infinimesh.io"
           secretName: "api-infinimesh-io-tls"
     grpc:
-      host: "grpc.infinimesh.io"
+      host: "grpc.api.infinimesh.io"
       tls:
         - hosts:
-          - "grpc.infinimesh.io"
+          - "grpc.api.infinimesh.io"
           secretName: "api-infinimesh-io-tls"

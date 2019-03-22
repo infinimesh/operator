@@ -185,6 +185,9 @@ func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instan
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
 			Namespace: instance.Namespace,
+			Annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+			},
 		},
 		Spec: extensionsv1beta1.IngressSpec{
 			TLS: instance.Spec.Apiserver.GRPC.TLS,
@@ -196,7 +199,7 @@ func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instan
 							Paths: []extensionsv1beta1.HTTPIngressPath{
 								{
 									Backend: extensionsv1beta1.IngressBackend{
-										ServiceName: instance.Name + "-apiserver-rest",
+										ServiceName: instance.Name + "-apiserver",
 										ServicePort: intstr.FromInt(8080),
 									},
 								},
