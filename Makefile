@@ -53,3 +53,7 @@ docker-build: test
 # Push the docker image
 docker-push:
 	docker push ${IMG}
+
+generate-manifests:
+	kustomize build config -o manifests/operator.yaml
+	cp config/crds/infinimesh_v1beta1_platform.yaml ./manifests/crd.yaml
