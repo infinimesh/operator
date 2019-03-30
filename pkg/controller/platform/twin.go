@@ -176,6 +176,10 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 										Name:  "DB_ADDR",
 										Value: instance.Name + "-twin-redis:6379",
 									},
+									{
+										Name:  "DEVICE_REGISTRY_URL",
+										Value: instance.Name + "-device-registry:8080",
+									},
 								},
 							},
 						},
