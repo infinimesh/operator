@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
 	"google.golang.org/grpc"
@@ -18,6 +19,7 @@ import (
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
 
+	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
 
@@ -55,8 +57,65 @@ func (r *ReconcilePlatform) reconcileDgraph(request reconcile.Request, instance 
 		return err
 	}
 
+	// adminPassword, err := GenerateRandomKey(32)
+	// if err != nil {
+	// 	log.Error(err, "Failed to generate admin password")
+	// }
+
+	randomKey, err := GenerateRandomBytes(32)
+	if err != nil {
+		return err
+	}
+
+	pw := base64.StdEncoding.EncodeToString([]byte(randomKey))
+
+	secretAdmin := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      instance.Name + "-root-account",
+			Namespace: instance.Namespace,
+		},
+		StringData: map[string]string{
+			"username": "root",
+			"password": pw,
+		},
+	}
+
+	hostNodeserver := instance.Name + "-nodeserver." + instance.Namespace + ".svc.cluster.local:8080"
+
+	nodeserverConn, err := grpc.Dial(hostNodeserver)
+	if err != nil {
+		log.Error(err, "Failed connect to nodeserver")
+	}
+	nodeserverClient := nodepb.NewAccountServiceClient(nodeserverConn)
+	resp, err := nodeserverClient.CreateUserAccount(context.TODO(), &nodepb.CreateUserAccountRequest{})
+	if err != nil {
+		log.Error(err, "Failed to create root account")
+	}
+
+	// Write event
+	log.Info("Create admin account", "ID", resp.Uid)
+
+	if err := controllerutil.SetControllerReference(instance, secretAdmin, r.scheme); err != nil {
+		return err
+	}
+
+	foundAdminSecret := &corev1.Secret{}
+	err = r.Get(context.TODO(), types.NamespacedName{Name: secretAdmin.Name, Namespace: secretAdmin.Namespace}, foundAdminSecret)
+	if err != nil && errors.IsNotFound(err) {
+		log.Info("Creating admin secret", "namespace", secretAdmin.Namespace, "name", secretAdmin.Name)
+		err = r.Create(context.TODO(), secretAdmin)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	// foundAdminSecret := &corev1.Secret{}
+	// err := r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
+
 	found := &corev1.Service{}
-	err := r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
+	err = r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		log.Info("Creating zero service", "namespace", svc.Namespace, "name", svc.Name)
 		err = r.Create(context.TODO(), svc)
