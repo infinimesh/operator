@@ -29,9 +29,15 @@ type PlatformSpec struct {
 	MQTT      PlatformMQTTBroker `json:"mqtt,omitempty" protobuf:"bytes,1,name=mqtt"`
 	Kafka     PlatformKafka      `json:"kafka,omitempty" protobuf:"bytes,2,name=kafka"`
 	Apiserver PlatformApiserver  `json:"apiserver,omitempty" protobuf:"bytes,3,name=apiserver"`
+	App       PlatformApp        `json:"app,omitempty" protobuf:"bytes,4,name=app"`
 
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+}
+
+type PlatformApp struct {
+	Host string                         `json:"host,omitempty" protobuf:"bytes,1,name=host"`
+	TLS  []extensionsv1beta1.IngressTLS `json:"tls,omitempty" protobuf:"bytes,2,name=tls"`
 }
 
 type PlatformApiserver struct {
