@@ -538,5 +538,10 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 
 	fmt.Println("Called alter, res", err)
 
-	return r.syncRootPassword(request, instance)
+	err = r.syncRootPassword(request, instance)
+	if err != nil {
+		log.Error(err, "Failed to sync password")
+	}
+
+	return nil
 }
