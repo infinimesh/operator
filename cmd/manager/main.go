@@ -18,19 +18,23 @@ package main
 
 import (
 	"flag"
+	"math/rand"
 	"os"
+	"time"
 
-	"github.com/infinimesh/operator/pkg/apis"
-	"github.com/infinimesh/operator/pkg/controller"
-	"github.com/infinimesh/operator/pkg/webhook"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+
+	"github.com/infinimesh/operator/pkg/apis"
+	"github.com/infinimesh/operator/pkg/controller"
+	"github.com/infinimesh/operator/pkg/webhook"
 )
 
 func main() {
+	rand.Seed(time.Now().UTC().UnixNano())
 	var metricsAddr string
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.Parse()

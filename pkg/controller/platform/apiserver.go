@@ -35,6 +35,16 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 	return b, nil
 }
 
+func GenerateRandomKey(n int) (string, error) {
+	randomKey, err := GenerateRandomBytes(32)
+	if err != nil {
+		return "", err
+	}
+
+	base64Secret := make([]byte, base64.StdEncoding.EncodedLen(len(randomKey)))
+	return base64.StdEncoding.EncodeToString(base64Secret), nil
+}
+
 func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	log := logger.WithName("apiserver")
 

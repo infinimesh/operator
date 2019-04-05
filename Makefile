@@ -26,7 +26,7 @@ deploy: manifests
 	kustomize build config | kubectl apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests:
+gen-manifests:
 	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go all
 
 # Run go fmt against code
