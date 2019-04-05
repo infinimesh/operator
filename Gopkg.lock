@@ -211,12 +211,12 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:55fa49f97f1c5dfb6a7def4151677be985f6f1eb2fdda7c064c7dca3b8c58189"
+  branch = "master"
+  digest = "1:bb61c2f63544bd70bdd79bbab59cbfe6d787cab0826b777efe0ab8dfa2aa4056"
   name = "github.com/infinimesh/infinimesh"
   packages = ["pkg/node/nodepb"]
   pruneopts = "T"
-  revision = "25555f1cb839f33cc316077003fb2cb43bb036db"
-  version = "v0.1.3"
+  revision = "e392d3a87cf82c1044d7712f67743bbda0bd97d4"
 
 [[projects]]
   digest = "1:ee5840274624ad20cac08227aeca582fbdaf3727ef9dd37ae935706240679e09"

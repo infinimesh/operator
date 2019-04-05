@@ -18,10 +18,127 @@ import (
 
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/go-logr/logr"
+
+	"strings"
 
 	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
+
+func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, nodeserverClient nodepb.AccountServiceClient, log logr.Logger) error {
+	// Try to login
+	_, err := nodeserverClient.Authenticate(context.TODO(), &nodepb.AuthenticateRequest{
+		Username: "root",
+		Password: pw,
+	})
+	if err != nil {
+		log.Info("Failed to auth with root. Try to create it", "error", err)
+	} else {
+		log.Info("Coldnt login with root")
+		return nil
+	}
+
+	_, err = nodeserverClient.SetPassword(context.TODO(), &nodepb.SetPasswordRequest{
+		Username: "root",
+		Password: pw,
+	})
+	if err != nil {
+		log.Info("Failed to set pw. Have to create account", "err", err.Error())
+	} else {
+		log.Info("Set Password to content of secret")
+	}
+
+	if err != nil {
+		respCreate, err := nodeserverClient.CreateUserAccount(context.TODO(), &nodepb.CreateUserAccountRequest{
+			Account: &nodepb.Account{
+				Name:    "root",
+				IsRoot:  true,
+				Enabled: true,
+			},
+			Password: pw,
+		})
+		if err != nil {
+			log.Error(err, "Failed to create root account")
+			return err
+		}
+
+		// Write event
+		log.Info("Created admin account", "ID", respCreate.Uid)
+	}
+	return nil
+}
+
+func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
+	log := logger.WithName("rootpw")
+
+	hostNodeserver := instance.Name + "-nodeserver." + instance.Namespace + ".svc.cluster.local:8080"
+	nodeserverConn, err := grpc.Dial(hostNodeserver, grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+
+	nodeserverClient := nodepb.NewAccountServiceClient(nodeserverConn)
+
+	randomKey, err := GenerateRandomBytes(32)
+	if err != nil {
+		return err
+	}
+
+	pw := base64.StdEncoding.EncodeToString([]byte(randomKey))
+
+	foundAdminSecret := &corev1.Secret{}
+	err = r.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-root-account", Namespace: instance.Namespace}, foundAdminSecret)
+	if err != nil && errors.IsNotFound(err) {
+		log.Info("Creating admin secret", "namespace", instance.Namespace, "name", instance.Name+"-root-account")
+
+		secretAdmin := &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      instance.Name + "-root-account",
+				Namespace: instance.Namespace,
+			},
+			StringData: map[string]string{
+				"username": "root",
+				"password": pw,
+			},
+		}
+
+		log.Info("gRPC dial OK")
+		nodeserverClient := nodepb.NewAccountServiceClient(nodeserverConn)
+
+		err = setPassword(instance, "root", pw, nodeserverClient, log.WithName("setPassword"))
+		if err != nil {
+			return err
+		}
+
+		if err := controllerutil.SetControllerReference(instance, secretAdmin, r.scheme); err != nil {
+			return err
+		}
+
+		err = r.Create(context.TODO(), secretAdmin)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		// Exists, sync password in secret to password in dgraph
+
+		secretB64, ok := foundAdminSecret.Data["password"]
+		if !ok {
+			log.Info("No password field present in secret, ignoring")
+			return nil
+		}
+
+		secretStr := strings.Trim(string(secretB64), "\n")
+
+		err = setPassword(instance, "root", secretStr, nodeserverClient, log.WithName("setPassword"))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (r *ReconcilePlatform) reconcileDgraph(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	log := logger.WithName("dgraph")
@@ -62,60 +179,11 @@ func (r *ReconcilePlatform) reconcileDgraph(request reconcile.Request, instance 
 	// 	log.Error(err, "Failed to generate admin password")
 	// }
 
-	randomKey, err := GenerateRandomBytes(32)
-	if err != nil {
-		return err
-	}
-
-	pw := base64.StdEncoding.EncodeToString([]byte(randomKey))
-
-	secretAdmin := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      instance.Name + "-root-account",
-			Namespace: instance.Namespace,
-		},
-		StringData: map[string]string{
-			"username": "root",
-			"password": pw,
-		},
-	}
-
-	hostNodeserver := instance.Name + "-nodeserver." + instance.Namespace + ".svc.cluster.local:8080"
-
-	nodeserverConn, err := grpc.Dial(hostNodeserver)
-	if err != nil {
-		log.Error(err, "Failed connect to nodeserver")
-	}
-	nodeserverClient := nodepb.NewAccountServiceClient(nodeserverConn)
-	resp, err := nodeserverClient.CreateUserAccount(context.TODO(), &nodepb.CreateUserAccountRequest{})
-	if err != nil {
-		log.Error(err, "Failed to create root account")
-	}
-
-	// Write event
-	log.Info("Create admin account", "ID", resp.Uid)
-
-	if err := controllerutil.SetControllerReference(instance, secretAdmin, r.scheme); err != nil {
-		return err
-	}
-
-	foundAdminSecret := &corev1.Secret{}
-	err = r.Get(context.TODO(), types.NamespacedName{Name: secretAdmin.Name, Namespace: secretAdmin.Namespace}, foundAdminSecret)
-	if err != nil && errors.IsNotFound(err) {
-		log.Info("Creating admin secret", "namespace", secretAdmin.Namespace, "name", secretAdmin.Name)
-		err = r.Create(context.TODO(), secretAdmin)
-		if err != nil {
-			return err
-		}
-	} else if err != nil {
-		return err
-	}
-
 	// foundAdminSecret := &corev1.Secret{}
 	// err := r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
 
 	found := &corev1.Service{}
-	err = r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
+	err := r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		log.Info("Creating zero service", "namespace", svc.Namespace, "name", svc.Name)
 		err = r.Create(context.TODO(), svc)
@@ -470,5 +538,5 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 
 	fmt.Println("Called alter, res", err)
 
-	return nil
+	return r.syncRootPassword(request, instance)
 }

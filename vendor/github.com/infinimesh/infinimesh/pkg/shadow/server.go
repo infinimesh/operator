@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/cskr/pubsub"
@@ -30,46 +29,54 @@ func (s *Server) Get(context context.Context, req *shadowpb.GetRequest) (respons
 		Shadow: &shadowpb.Shadow{},
 	}
 
-	ts, err := ptypes.TimestampProto(time.Now())
-	if err != nil {
-		return nil, err
-	}
-
 	// TODO fetch device from registry, 404 if not found
 
 	reportedState, err := s.Repo.GetReported(req.Id)
 	if err != nil {
 		reportedState.ID = req.Id
-		reportedState.State = json.RawMessage([]byte("{}"))
-		reportedState.Version = uint64(0)
+		reportedState.State = FullDeviceStateMessage{
+			Version: uint64(0),
+			State:   json.RawMessage([]byte("{}")),
+		}
 	}
 
 	desiredState, err := s.Repo.GetDesired(req.Id)
 	if err != nil {
 		desiredState.ID = req.Id
-		desiredState.State = json.RawMessage([]byte("{}"))
-		desiredState.Version = uint64(0)
+		desiredState.State = FullDeviceStateMessage{
+			Version: uint64(0),
+			State:   json.RawMessage([]byte("{}")),
+		}
 	}
 
 	u := &jsonpb.Unmarshaler{}
 
 	var reportedValue structpb.Value
-	if err := u.Unmarshal(bytes.NewReader(reportedState.State), &reportedValue); err != nil {
+	if err := u.Unmarshal(bytes.NewReader(reportedState.State.State), &reportedValue); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to unmarshal reported JSON from database: %v\n", err)
 	} else {
+		ts, err := ptypes.TimestampProto(reportedState.State.Timestamp)
+		if err != nil {
+			return nil, err
+		}
 		response.Shadow.Reported = &shadowpb.VersionedValue{
-			Version:   uint64(reportedState.Version),
+			Version:   uint64(reportedState.State.Version),
 			Data:      &reportedValue,
 			Timestamp: ts,
 		}
 	}
 
 	var desiredValue structpb.Value
-	if err := u.Unmarshal(bytes.NewReader(desiredState.State), &desiredValue); err != nil {
+	if err := u.Unmarshal(bytes.NewReader(desiredState.State.State), &desiredValue); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to unmarshal JSON from database: %v\n", err)
 	} else {
+		ts, err := ptypes.TimestampProto(desiredState.State.Timestamp)
+		if err != nil {
+			return nil, err
+		}
+
 		response.Shadow.Desired = &shadowpb.VersionedValue{
-			Version:   uint64(desiredState.Version),
+			Version:   uint64(desiredState.State.Version),
 			Data:      &desiredValue,
 			Timestamp: ts,
 		}
@@ -104,30 +111,36 @@ func (s *Server) StreamReportedStateChanges(request *shadowpb.StreamReportedStat
 	events := s.PubSub.Sub(request.Id)
 	defer s.PubSub.Unsub(events)
 	for event := range events {
-
 		var value structpb.Value
-		if raw, ok := event.(json.RawMessage); ok {
+		if raw, ok := event.(*DeltaDeviceStateMessage); ok {
 			var u jsonpb.Unmarshaler
-			err = u.Unmarshal(bytes.NewReader(raw), &value)
+			err = u.Unmarshal(bytes.NewReader(raw.Delta), &value)
 			if err != nil {
 				fmt.Println("Failed to unmarshal jsonpb: ", err)
 				continue
+			}
+
+			ts, err := ptypes.TimestampProto(raw.Timestamp)
+			if err != nil {
+				fmt.Println("Invalid timestamp", err)
+				break
+			}
+
+			err = srv.Send(&shadowpb.StreamReportedStateChangesResponse{
+				ReportedDelta: &shadowpb.VersionedValue{
+					Version:   raw.Version,
+					Data:      &value,
+					Timestamp: ts, // TODO
+				},
+			})
+			if err != nil {
+				break
 			}
 		} else {
 			fmt.Println("Failed type assertion")
 			continue
 		}
 
-		err = srv.Send(&shadowpb.StreamReportedStateChangesResponse{
-			ReportedDelta: &shadowpb.VersionedValue{
-				Version:   0,
-				Data:      &value,
-				Timestamp: ptypes.TimestampNow(), // TODO
-			},
-		})
-		if err != nil {
-			break
-		}
 	}
 	return nil
 }
