@@ -49,6 +49,15 @@ spec:
                       type: array
                   type: object
               type: object
+            app:
+              properties:
+                host:
+                  type: string
+                tls:
+                  items:
+                    type: object
+                  type: array
+              type: object
             kafka:
               properties:
                 bootstrapServers:
