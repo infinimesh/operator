@@ -196,7 +196,8 @@ func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instan
 			Name:      deploymentName,
 			Namespace: instance.Namespace,
 			Annotations: map[string]string{
-				"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+				"nginx.ingress.kubernetes.io/backend-protocol":   "GRPC",
+				"nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
 			},
 		},
 		Spec: extensionsv1beta1.IngressSpec{

@@ -117,6 +117,9 @@ func (r *ReconcilePlatform) reconcileApiserverRest(request reconcile.Request, in
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
 			Namespace: instance.Namespace,
+			Annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
+			},
 		},
 		Spec: extensionsv1beta1.IngressSpec{
 			TLS: instance.Spec.Apiserver.Restful.TLS,
