@@ -22,6 +22,7 @@ import (
 
 	"strings"
 
+	"github.com/infinimesh/infinimesh/pkg/node/dgraph"
 	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
@@ -35,7 +36,7 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 	if err != nil {
 		log.Info("Failed to auth with root. Try to create it", "error", err)
 	} else {
-		log.Info("Coldnt login with root")
+		log.Info("Logged in with root, password is up to date")
 		return nil
 	}
 
@@ -511,7 +512,6 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 	// TODO: install schema; then update status with that info
 	// TODO do this only if necessary
 	host := instance.Name + "-dgraph-alpha." + instance.Namespace + ".svc.cluster.local:9080"
-	fmt.Println("host", host)
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err != nil {
 		fmt.Println("Failed to connect to dg", err)
@@ -519,24 +519,11 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 
 	dg := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 
-	err = dg.Alter(context.Background(), &api.Operation{
-		Schema: `
-  tags: [string] .
-  name: string @index(exact) .
-  username: string @index(exact) .
-  action: string @index(term) .
-  type: string @index(exact) .
-  access.to: uid @reverse .
-  children: uid @reverse .
-  owns: uid @reverse .
-  kind: string @index(exact) .
-  has.credentials: uid @reverse .
-  fingerprint: string @index(exact) .
-  certificates: uid @reverse .
-  password: password .`,
-	})
-
-	fmt.Println("Called alter, res", err)
+	err = dgraph.ImportSchema(dg)
+	if err != nil {
+		log.Error(err, "Failed to import schema")
+	}
+	log.Info("Imported schema")
 
 	err = r.syncRootPassword(request, instance)
 	if err != nil {
