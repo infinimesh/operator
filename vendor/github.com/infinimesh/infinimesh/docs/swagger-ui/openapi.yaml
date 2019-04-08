@@ -1,5 +1,7 @@
 components:
   schemas:
+    apiCreateNamespacePermissionResponse:
+      type: object
     apiTokenRequest:
       properties:
         password:
@@ -74,10 +76,27 @@ components:
         parent:
           type: string
       type: object
+    infinimeshapiPermission:
+      description: 'Permission.Action may either be NONE, READ or WRITE.'
+      properties:
+        action:
+          $ref: '#/components/schemas/nodeAction'
+      type: object
     infinimeshdeviceregistryGetResponse:
       properties:
         device:
           $ref: '#/components/schemas/deviceregistryDevice'
+      type: object
+    infinimeshnodePermission:
+      properties:
+        account_id:
+          type: string
+        account_name:
+          type: string
+        action:
+          $ref: '#/components/schemas/nodeAction'
+        namespace:
+          type: string
       type: object
     infinimeshshadowGetResponse:
       properties:
@@ -101,6 +120,13 @@ components:
         uid:
           type: string
       type: object
+    nodeAction:
+      default: NONE
+      enum:
+        - NONE
+        - READ
+        - WRITE
+      type: string
     nodeCreateNamespaceRequest:
       properties:
         name:
@@ -119,6 +145,8 @@ components:
           type: string
       type: object
     nodeDeleteObjectResponse:
+      type: object
+    nodeDeletePermissionResponse:
       type: object
     nodeListAccountsResponse:
       properties:
@@ -139,6 +167,13 @@ components:
         objects:
           items:
             $ref: '#/components/schemas/nodeObject'
+          type: array
+      type: object
+    nodeListPermissionsResponse:
+      properties:
+        permissions:
+          items:
+            $ref: '#/components/schemas/infinimeshnodePermission'
           type: array
       type: object
     nodeNamespace:
@@ -709,7 +744,9 @@ components:
       type: object
     shadowStreamReportedStateChangesResponse:
       properties:
-        reportedDelta:
+        desiredState:
+          $ref: '#/components/schemas/shadowVersionedValue'
+        reportedState:
           $ref: '#/components/schemas/shadowVersionedValue'
       type: object
     shadowVersionedValue:
@@ -983,6 +1020,12 @@ paths:
           required: true
           schema:
             type: string
+        - in: query
+          name: only_delta
+          required: false
+          schema:
+            format: boolean
+            type: boolean
       responses:
         '200':
           content:
@@ -1037,6 +1080,75 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/nodeNamespace'
+          description: A successful response.
+      tags:
+        - Namespaces
+  '/namespaces/{namespace}/permissions':
+    get:
+      operationId: ListPermissions
+      parameters:
+        - in: path
+          name: namespace
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/nodeListPermissionsResponse'
+          description: A successful response.
+      tags:
+        - Namespaces
+  '/namespaces/{namespace}/permissions/{account_id}':
+    delete:
+      operationId: DeletePermission
+      parameters:
+        - in: path
+          name: namespace
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: account_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/nodeDeletePermissionResponse'
+          description: A successful response.
+      tags:
+        - Namespaces
+    put:
+      operationId: CreatePermission
+      parameters:
+        - in: path
+          name: namespace
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: account_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/infinimeshapiPermission'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiCreateNamespacePermissionResponse'
           description: A successful response.
       tags:
         - Namespaces

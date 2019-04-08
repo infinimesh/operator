@@ -12,6 +12,8 @@ export class DeviceDetailComponent implements OnInit, OnDestroy {
   device$;
   state;
   stateSubscription;
+  desiredStateUpdated = false;
+  reportedStateUpdated = false;
   JSON = JSON;
 
   constructor(private route: ActivatedRoute,
@@ -22,15 +24,36 @@ export class DeviceDetailComponent implements OnInit, OnDestroy {
       const deviceId = params.get("deviceId")
       this.device$ = this.deviceService.getOne(deviceId);
       this.deviceService.getState(deviceId).subscribe(state => {
-        this.state = state;
+        if(state) {
+          this.state = state;
+        } else {
+          this.state = {
+            reported: {},
+            desired: {}
+          };
+        }
         this.stateSubscription = this.deviceService.streamState(deviceId).subscribe((data) => {
-          console.log(data);
-          this.state.reported.data = data.reportedDelta.data;
-          this.state.reported.timestamp = data.reportedDelta.timestamp;
-          this.state.reported.version = data.reportedDelta.version;
+          this.handleStateUpdate(data);
         });
       })
     })
+  }
+
+  private handleStateUpdate(data) {
+    if (data.reportedState && data.reportedState !== null) {
+      this.state.reported = data.reportedState;
+      this.reportedStateUpdated = true
+      setTimeout(() => {
+        this.reportedStateUpdated = false
+      }, 500);
+    }
+    if (data.desiredState && data.desiredState !== null) {
+      this.state.desired = data.desiredState;
+      this.desiredStateUpdated = true
+      setTimeout(() => {
+        this.desiredStateUpdated = false
+      }, 500);
+    }
   }
 
   ngOnDestroy(): void {

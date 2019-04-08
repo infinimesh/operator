@@ -212,11 +212,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bb61c2f63544bd70bdd79bbab59cbfe6d787cab0826b777efe0ab8dfa2aa4056"
+  digest = "1:099f859199324dee23fd7f134fdb9490086cd21e868b6b2cf379523e83180ec0"
   name = "github.com/infinimesh/infinimesh"
-  packages = ["pkg/node/nodepb"]
+  packages = [
+    "pkg/node",
+    "pkg/node/dgraph",
+    "pkg/node/nodepb",
+  ]
   pruneopts = "T"
-  revision = "e392d3a87cf82c1044d7712f67743bbda0bd97d4"
+  revision = "f96f9c153878c16d392d7fca4e16eb94ff0c22e1"
 
 [[projects]]
   digest = "1:ee5840274624ad20cac08227aeca582fbdaf3727ef9dd37ae935706240679e09"
@@ -1013,6 +1017,8 @@
     "github.com/dgraph-io/dgo",
     "github.com/dgraph-io/dgo/protos/api",
     "github.com/emicklei/go-restful",
+    "github.com/go-logr/logr",
+    "github.com/infinimesh/infinimesh/pkg/node/dgraph",
     "github.com/infinimesh/infinimesh/pkg/node/nodepb",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",

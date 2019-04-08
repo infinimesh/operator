@@ -26,7 +26,6 @@ option java_package = "com.infinimesh.api";
 import "google/api/annotations.proto";
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/empty.proto";
-import "pkg/node/nodepb/namespace.proto";
 import "pkg/node/nodepb/node.proto";
 import "pkg/registry/registrypb/device_registry.proto";
 import "pkg/shadow/shadowpb/shadow.proto";
@@ -121,11 +120,12 @@ service Accounts {
   };
 };
 
-  rpc GetAccount(infinimesh.node.GetAccountRequest) returns (infinimesh.node.Account) {
-    option (google.api.http) = {
-      get : "/accounts/{id}"
-    };
+rpc GetAccount(infinimesh.node.GetAccountRequest)
+    returns (infinimesh.node.Account) {
+  option (google.api.http) = {
+    get : "/accounts/{id}"
   };
+};
 
 rpc UpdateAccount(infinimesh.node.UpdateAccountRequest)
     returns (infinimesh.node.Account) {
@@ -198,4 +198,34 @@ service Namespaces {
       get : "/namespaces"
     };
   };
+  rpc CreatePermission(CreateNamespacePermissionRequest)
+      returns (CreateNamespacePermissionResponse) {
+    option (google.api.http) = {
+      put : "/namespaces/{namespace}/permissions/{account_id}"
+      body : "permission"
+    };
+  };
+  rpc ListPermissions(infinimesh.node.ListPermissionsRequest)
+      returns (infinimesh.node.ListPermissionsResponse) {
+    option (google.api.http) = {
+      get : "/namespaces/{namespace}/permissions"
+    };
+  };
+  rpc DeletePermission(infinimesh.node.DeletePermissionRequest)
+      returns (infinimesh.node.DeletePermissionResponse) {
+    option (google.api.http) = {
+      delete : "/namespaces/{namespace}/permissions/{account_id}"
+    };
+  };
 }
+
+message CreateNamespacePermissionRequest {
+  string account_id = 1;
+  string namespace = 2;
+  Permission permission = 3;
+}
+
+// Permission.Action may either be NONE, READ or WRITE.
+message Permission { infinimesh.node.Action action = 3; }
+
+message CreateNamespacePermissionResponse {}

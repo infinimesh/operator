@@ -43,7 +43,6 @@ func (s *AccountController) CreateUserAccount(ctx context.Context, request *node
 
 func (s *AccountController) AuthorizeNamespace(ctx context.Context, request *nodepb.AuthorizeNamespaceRequest) (response *nodepb.AuthorizeNamespaceResponse, err error) {
 	err = s.Repo.AuthorizeNamespace(ctx, request.GetAccount(), request.GetNamespace(), request.GetAction())
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to authorize")
 	}
@@ -97,6 +96,19 @@ func (s *AccountController) IsAuthorized(ctx context.Context, request *nodepb.Is
 		zap.String("request.action", request.GetAction().String()),
 		zap.String("request.node", request.GetNode()),
 	)
+
+	root, err := s.IsRoot(ctx, &nodepb.IsRootRequest{
+		Account: request.GetAccount(),
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Authorization check failed")
+	}
+
+	if root.GetIsRoot() {
+		return &nodepb.IsAuthorizedResponse{
+			Decision: &wrappers.BoolValue{Value: true},
+		}, nil
+	}
 
 	decision, err := s.Repo.IsAuthorized(ctx, request.GetNode(), request.GetAccount(), request.GetAction().String())
 	if err != nil {

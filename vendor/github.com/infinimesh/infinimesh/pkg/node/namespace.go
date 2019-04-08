@@ -55,3 +55,20 @@ func (n *NamespaceController) GetNamespace(ctx context.Context, request *nodepb.
 
 	return namespace, nil
 }
+
+func (n *NamespaceController) ListPermissions(ctx context.Context, request *nodepb.ListPermissionsRequest) (response *nodepb.ListPermissionsResponse, err error) {
+	permissions, err := n.Repo.ListPermissionsInNamespace(ctx, request.Namespace)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed get permissions")
+	}
+
+	return &nodepb.ListPermissionsResponse{Permissions: permissions}, nil
+}
+
+func (n *NamespaceController) DeletePermission(ctx context.Context, request *nodepb.DeletePermissionRequest) (response *nodepb.DeletePermissionResponse, err error) {
+	err = n.Repo.DeletePermissionInNamespace(ctx, request.Namespace, request.AccountId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to delete permission")
+	}
+	return &nodepb.DeletePermissionResponse{}, nil
+}

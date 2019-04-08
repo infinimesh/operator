@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -34,7 +35,7 @@ func (s *Server) Get(context context.Context, req *shadowpb.GetRequest) (respons
 	reportedState, err := s.Repo.GetReported(req.Id)
 	if err != nil {
 		reportedState.ID = req.Id
-		reportedState.State = FullDeviceStateMessage{
+		reportedState.State = DeviceStateMessage{
 			Version: uint64(0),
 			State:   json.RawMessage([]byte("{}")),
 		}
@@ -43,7 +44,7 @@ func (s *Server) Get(context context.Context, req *shadowpb.GetRequest) (respons
 	desiredState, err := s.Repo.GetDesired(req.Id)
 	if err != nil {
 		desiredState.ID = req.Id
-		desiredState.State = FullDeviceStateMessage{
+		desiredState.State = DeviceStateMessage{
 			Version: uint64(0),
 			State:   json.RawMessage([]byte("{}")),
 		}
@@ -107,40 +108,85 @@ func (s *Server) PatchDesiredState(context context.Context, req *shadowpb.PatchD
 }
 
 func (s *Server) StreamReportedStateChanges(request *shadowpb.StreamReportedStateChangesRequest, srv shadowpb.Shadows_StreamReportedStateChangesServer) (err error) {
+	fmt.Println("only", request.OnlyDelta)
 	// TODO validate request/Id
-	events := s.PubSub.Sub(request.Id)
-	defer s.PubSub.Unsub(events)
-	for event := range events {
-		var value structpb.Value
-		if raw, ok := event.(*DeltaDeviceStateMessage); ok {
-			var u jsonpb.Unmarshaler
-			err = u.Unmarshal(bytes.NewReader(raw.Delta), &value)
-			if err != nil {
-				fmt.Println("Failed to unmarshal jsonpb: ", err)
-				continue
-			}
 
-			ts, err := ptypes.TimestampProto(raw.Timestamp)
+	var subPathReported string
+	if request.OnlyDelta {
+		subPathReported = "/reported/delta"
+	} else {
+		subPathReported = "/reported/full"
+	}
+
+	events := s.PubSub.Sub(request.Id + subPathReported)
+	defer s.PubSub.Unsub(events)
+
+	var subPathDesired string
+	if request.OnlyDelta {
+		subPathDesired = "/desired/delta"
+	} else {
+		subPathDesired = "/desired/full"
+	}
+
+	eventsDesired := s.PubSub.Sub(request.Id + subPathDesired)
+	defer s.PubSub.Unsub(eventsDesired)
+
+outer:
+	for {
+		select {
+		case reportedEvent := <-events:
+			value, err := toProto(reportedEvent)
 			if err != nil {
-				fmt.Println("Invalid timestamp", err)
-				break
+				break outer
 			}
 
 			err = srv.Send(&shadowpb.StreamReportedStateChangesResponse{
-				ReportedDelta: &shadowpb.VersionedValue{
-					Version:   raw.Version,
-					Data:      &value,
-					Timestamp: ts, // TODO
-				},
+				ReportedState: value,
 			})
 			if err != nil {
 				break
 			}
-		} else {
-			fmt.Println("Failed type assertion")
-			continue
+		case desiredEvent := <-eventsDesired:
+			value, err := toProto(desiredEvent)
+			if err != nil {
+				break outer
+			}
+
+			err = srv.Send(&shadowpb.StreamReportedStateChangesResponse{
+				DesiredState: value,
+			})
+			if err != nil {
+				break
+			}
 		}
 
 	}
 	return nil
+}
+
+func toProto(event interface{}) (result *shadowpb.VersionedValue, err error) {
+	var value structpb.Value
+	if raw, ok := event.(*DeviceStateMessage); ok {
+		var u jsonpb.Unmarshaler
+		err = u.Unmarshal(bytes.NewReader(raw.State), &value)
+		if err != nil {
+			fmt.Println("Failed to unmarshal jsonpb: ", err)
+			return nil, err
+		}
+
+		ts, err := ptypes.TimestampProto(raw.Timestamp)
+		if err != nil {
+			fmt.Println("Invalid timestamp", err)
+			return nil, err
+		}
+
+		return &shadowpb.VersionedValue{
+			Version:   raw.Version,
+			Data:      &value,
+			Timestamp: ts, // TODO
+		}, nil
+	} else {
+		return nil, errors.New("Failed type assertion")
+	}
+
 }
