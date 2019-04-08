@@ -519,7 +519,7 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 
 	dg := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 
-	err = dgraph.ImportSchema(dg)
+	err = dgraph.ImportSchema(dg, false)
 	if err != nil {
 		log.Error(err, "Failed to import schema")
 	}

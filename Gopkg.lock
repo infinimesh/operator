@@ -212,7 +212,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:099f859199324dee23fd7f134fdb9490086cd21e868b6b2cf379523e83180ec0"
+  digest = "1:785012a80bbae61fcdb257434f8fd13666c4a66061887df702800cdd803e67c3"
   name = "github.com/infinimesh/infinimesh"
   packages = [
     "pkg/node",
@@ -220,7 +220,7 @@
     "pkg/node/nodepb",
   ]
   pruneopts = "T"
-  revision = "f96f9c153878c16d392d7fca4e16eb94ff0c22e1"
+  revision = "c2d6f9961f4c6243051f3c72435076be2f4bbba6"
 
 [[projects]]
   digest = "1:ee5840274624ad20cac08227aeca582fbdaf3727ef9dd37ae935706240679e09"
