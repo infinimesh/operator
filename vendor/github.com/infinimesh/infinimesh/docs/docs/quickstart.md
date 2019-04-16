@@ -30,6 +30,10 @@ Generate the client certificate (and self-sign it):
 ```
 openssl req -new -x509 -sha256 -key sample_1.key -out sample_1.crt -days 365
 ```
+A namespace for your device(s) will be automatically created and reflect your username. A namespace is a reference to an organisational entinity to which the device belongs, e.g. Windmills or Buildings. To show the namespace(s) use the list command:
+```
+inf namespace list
+```
 Register the device in infinimesh's device registry:
 ```
 inf device create my-sample-device --cert-file sample_1.crt
@@ -40,7 +44,7 @@ inf device list
 ID     NAME               ENABLED
 0x9c   my-sample-device   value:true
 ```
-## Send and receive data from infinimesh
+## Send states from a device to infinimesh
 To simulate a device, we use the mosquitto_pub client. You can use any MQTT client, e.g. eclipse paho as well as Microsoft Edge on RaspberryPI, Yocto MQTT layers or Ubuntu Core based snaps. We use sometimes MQTTBox (http://workswithweb.com/html/mqttbox/installing_apps.html).
 ```
 mosquitto_pub --cafile /etc/ssl/certs/ca-certificates.crt --cert sample_1.crt --key sample_1.key -m '{"abc" : 1337}' -t "devices/<YOUR DEVICE ID>/state/reported/delta" -h mqtt.api.infinimesh.io  --tls-version tlsv1.2 -d -p 8883
@@ -71,7 +75,7 @@ The data has been sent successfully to the platform. To send more as one value p
  
 ## Read device data from the platform
 We managed to send data from a device to the platform. Now let's read back the device data from infinimesh!
-You can do this via gRPC or HTTP API. The simplest way is with the CLI.
+You can do this via gRPC or HTTP API. The simplest way is with the CLI (which uses gRPC).
 ```
 inf state get 0x8a
 ```
@@ -116,3 +120,19 @@ Configuration: <none>
 
 Thank you for your time and if you have any questions don't hesitate to get in touch with us! We are grateful for any improvements to the platform or this documentation, just send us a PR. 
 
+## Send states from the platform to the device
+Sending states (`desired states`) to a device is very simple. You only need to know the deviceID.
+Use the API, or just the CLI.
+
+```
+inf state set 0x9c 1337
+```
+
+This sends the state `1337` to the device. Note that repeatedly sending the same state does not trigger a new message every time. One changes are send to the device.
+
+Once the state it sent, you can inspect this from the server side by running:
+```
+inf state get 0x9c
+```
+
+The state is visible in the `desired` section.

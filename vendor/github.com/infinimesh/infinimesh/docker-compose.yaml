@@ -5,6 +5,20 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+  timescaledb:
+    image: timescale/timescaledb:latest-pg11
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+    - 5432:5432
+  grafana:
+    hostname: grafana
+    image: grafana/grafana:6.1.3
+    expose:
+      - 3000
+    ports:
+      - 3000:3000
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
@@ -71,6 +85,12 @@ services:
       - KAFKA_HOST=kafka:29092
       - "DB_ADDR=redis:6379"
     restart: unless-stopped
+  frontend:
+    ports:
+      - "8082:80"
+    image: quay.io/infinimesh/frontend:latest
+    environment:
+            - "APISERVER_URL=http://localhost:8081"
   apiserver:
     ports:
       - "8080:8080"
