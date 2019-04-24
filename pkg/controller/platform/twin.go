@@ -278,10 +278,15 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 					Spec: corev1.PodSpec{
 						Containers: []corev1.Container{
 							{
-								Name:            "redis",
-								Image:           "redis:latest",
-								ImagePullPolicy: corev1.PullAlways,
-								Env:             []corev1.EnvVar{},
+								Name:  "redis",
+								Image: "redis:latest",
+								Env:   []corev1.EnvVar{},
+								VolumeMounts: []corev1.VolumeMount{
+									{
+										Name:      "redis-data",
+										MountPath: "/data",
+									},
+								},
 							},
 						},
 					},
