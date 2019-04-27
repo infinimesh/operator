@@ -82,6 +82,18 @@ rules:
   - update
   - patch
 - apiGroups:
+  - kubedb.com
+  resources:
+  - postgreses
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
   - admissionregistration.k8s.io
   resources:
   - mutatingwebhookconfigurations

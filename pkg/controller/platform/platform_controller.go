@@ -125,6 +125,7 @@ type ReconcilePlatform struct {
 // +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=infinimesh.infinimesh.io,resources=platforms,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infinimesh.infinimesh.io,resources=platforms/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=kubedb.com,resources=postgreses,verbs=get;list;watch;create;update;patch;delete
 func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// Fetch the Platform instance
 	instance := &infinimeshv1beta1.Platform{}

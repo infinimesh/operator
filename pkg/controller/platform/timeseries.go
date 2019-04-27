@@ -8,6 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -90,6 +91,49 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 			}
 		}
 	}
+
+	pg := &unstructured.Unstructured{}
+	pg.Object = map[string]interface{}{
+		"kind":       "Postgres",
+		"apiVersion": "kubedb.com/v1alpha1",
+		"metadata": map[string]interface{}{
+			"name":      instance.Name + "-timescaledb",
+			"namespace": instance.Namespace,
+		},
+		"spec": map[string]interface{}{
+			"version":     "11.1-v1",
+			"storageType": "Durable",
+			"storage": map[string]interface{}{
+				"storageClassName": "standard",
+				"accessModes":      []string{"ReadWriteOnce"},
+				"resources": map[string]interface{}{
+					"requests": map[string]interface{}{
+						"storage": "10Gi",
+					},
+				},
+			},
+			"terminationPolicy": "DoNotTerminate",
+		},
+	}
+
+	foundPg := &unstructured.Unstructured{}
+	foundPg.Object = map[string]interface{}{
+		"apiVersion": "kubedb.com/v1alpha1",
+		"kind":       "Postgres",
+	}
+
+	err := r.Get(context.TODO(), types.NamespacedName{Name: pg.GetName(), Namespace: pg.GetNamespace()}, foundPg)
+	if err != nil && errors.IsNotFound(err) {
+		log.Info("Creating Database", "namespace", pg.GetNamespace(), "name", pg.GetName())
+		err = r.Create(context.TODO(), pg)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	// TODO updating not implemented
 
 	return nil
 }
