@@ -22,8 +22,6 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 	log := logger.WithName("time series")
 	{
 		deploymentName := instance.Name + "-timescale-connector"
-		// TODO(user): Change this to be the object type created by your controller
-		// Define the desired Deployment object
 
 		deploy := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -143,8 +141,6 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 
 	// Grafana
 	{
-
-		// TODO by default add data source ? Per api or some config/env in docker?
 		// TODO storage
 
 		deploymentName := instance.Name + "-grafana"
