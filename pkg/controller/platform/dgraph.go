@@ -27,6 +27,10 @@ import (
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
 
+const (
+	defaultStorage = "5Gi"
+)
+
 func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, nodeserverClient nodepb.AccountServiceClient, log logr.Logger) error {
 	// Try to login
 	_, err := nodeserverClient.Authenticate(context.TODO(), &nodepb.AuthenticateRequest{
@@ -175,14 +179,6 @@ func (r *ReconcilePlatform) reconcileDgraph(request reconcile.Request, instance 
 		return err
 	}
 
-	// adminPassword, err := GenerateRandomKey(32)
-	// if err != nil {
-	// 	log.Error(err, "Failed to generate admin password")
-	// }
-
-	// foundAdminSecret := &corev1.Secret{}
-	// err := r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
-
 	found := &corev1.Service{}
 	err := r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -193,6 +189,18 @@ func (r *ReconcilePlatform) reconcileDgraph(request reconcile.Request, instance 
 		}
 	} else if err != nil {
 		return err
+	}
+
+	var pvcSpec corev1.PersistentVolumeClaimSpec
+	if instance.Spec.DGraph.Storage == nil {
+		pvcSpec = corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse(defaultStorage)},
+			},
+		}
+	} else {
+		pvcSpec = *instance.Spec.DGraph.Storage
 	}
 
 	statefulSetZero := &appsv1.StatefulSet{
@@ -303,12 +311,7 @@ fi
 							"volume.alpha.kubernetes.io/storage-class": "anything",
 						},
 					},
-					Spec: corev1.PersistentVolumeClaimSpec{
-						AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-						Resources: corev1.ResourceRequirements{
-							Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("5Gi")},
-						},
-					},
+					Spec: pvcSpec,
 				},
 			},
 		},
@@ -482,12 +485,7 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 							"volume.alpha.kubernetes.io/storage-class": "anything",
 						},
 					},
-					Spec: corev1.PersistentVolumeClaimSpec{
-						AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-						Resources: corev1.ResourceRequirements{
-							Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("5Gi")},
-						},
-					},
+					Spec: pvcSpec,
 				},
 			},
 		},

@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	core "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -27,12 +28,25 @@ import (
 // PlatformSpec defines the desired state of Platform
 type PlatformSpec struct {
 	MQTT      PlatformMQTTBroker `json:"mqtt,omitempty" protobuf:"bytes,1,name=mqtt"`
+	DGraph    PlatformDgraph     `json:"dgraph,omitempty" protobuf:"bytes2,name=dgraph"`
 	Kafka     PlatformKafka      `json:"kafka,omitempty" protobuf:"bytes,2,name=kafka"`
 	Apiserver PlatformApiserver  `json:"apiserver,omitempty" protobuf:"bytes,3,name=apiserver"`
 	App       PlatformApp        `json:"app,omitempty" protobuf:"bytes,4,name=app"`
 
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+}
+
+type PlatformDgraph struct {
+	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty" protobuf:"bytes,1,name=storage"`
+}
+
+type PlatformTimeseries struct {
+	TimescaleDB *PlatformTimescaleDB `json:"timescaledb,omitempty" protobuf:"bytes,1,name=timescaledb"`
+}
+
+type PlatformTimescaleDB struct {
+	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty" protobuf:"bytes,2,name=storage"`
 }
 
 type PlatformApp struct {
