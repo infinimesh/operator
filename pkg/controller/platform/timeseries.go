@@ -266,6 +266,10 @@ datasources:
 										Name:  "GF_USERS_AUTO_ASSIGN_ORG_ROLE",
 										Value: "Viewer",
 									},
+									{
+										Name:  "GF_ALERTING_ENABLED",
+										Value: "false",
+									},
 								},
 							},
 							{
