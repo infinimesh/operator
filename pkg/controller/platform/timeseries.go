@@ -241,6 +241,57 @@ datasources:
 										ReadOnly:  true,
 									},
 								},
+								Env: []corev1.EnvVar{
+									{
+										Name:  "GF_AUTH_PROXY_ENABLED",
+										Value: "true",
+									},
+									{
+										Name:  "GF_AUTH_PROXY_HEADER_NAME",
+										Value: "X-WEBAUTH-USER",
+									},
+									{
+										Name:  "GF_AUTH_PROXY_AUTO_SIGN_UP",
+										Value: "true",
+									},
+									{
+										Name:  "GF_AUTH_PROXY_HEADER_PROPERTY",
+										Value: "username",
+									},
+									{
+										Name:  "GF_USERS_AUTO_ASSIGN_ORG",
+										Value: "true",
+									},
+									{
+										Name:  "GF_USERS_AUTO_ASSIGN_ORG_ROLE",
+										Value: "Viewer",
+									},
+								},
+							},
+							{
+								Name:  "proxy",
+								Image: "quay.io/infinimesh/grafana-proxy:latest",
+								Env: []corev1.EnvVar{
+									{
+										Name:  "NODE_HOST",
+										Value: instance.Name + "-nodeserver:8080",
+									},
+									{
+										Name:  "GRAFANA_URL",
+										Value: "http://" + instance.Name + "-grafana:3000",
+									},
+									{
+										Name: "JWT_SIGNING_KEY",
+										ValueFrom: &corev1.EnvVarSource{
+											SecretKeyRef: &corev1.SecretKeySelector{
+												LocalObjectReference: corev1.LocalObjectReference{
+													Name: instance.Name + "-apiserver",
+												},
+												Key: "signing-key",
+											},
+										},
+									},
+								},
 							},
 						},
 					},
