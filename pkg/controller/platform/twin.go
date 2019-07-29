@@ -17,6 +17,10 @@ import (
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
 
+const (
+	defaultStorage = "100Gi"
+)
+
 func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	log := logger.WithName("twin")
 	{
@@ -265,7 +269,7 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 						Spec: corev1.PersistentVolumeClaimSpec{
 							AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 							Resources: corev1.ResourceRequirements{
-								Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("10Gi")},
+								Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse(defaultStorage)},
 							},
 						},
 					},
