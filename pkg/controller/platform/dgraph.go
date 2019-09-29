@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	defaultStorage = "50Gi"
+	defaultStorage = "5Gi"
 )
 
 func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, nodeserverClient nodepb.AccountServiceClient, log logr.Logger) error {
