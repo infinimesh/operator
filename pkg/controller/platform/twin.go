@@ -266,6 +266,7 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 							AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("10Gi")},
+							},
 						},
 					},
 				},
