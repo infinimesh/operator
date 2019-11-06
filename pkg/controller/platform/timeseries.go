@@ -109,7 +109,7 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 					"accessModes":      []string{"ReadWriteOnce"},
 					"resources": map[string]interface{}{
 						"requests": map[string]interface{}{
-							"storage": "10Gi",
+							"storage": "50Gi",
 						},
 					},
 				},
