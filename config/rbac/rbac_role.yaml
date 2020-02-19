@@ -95,7 +95,6 @@ rules:
   - patch
 - apiGroups:
   - kubedb.com
-  - kubedb.com/my-infinimesh-timescaledb
   resources:
   - postgreses
   verbs:
