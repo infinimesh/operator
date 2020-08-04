@@ -37,7 +37,7 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 					Containers: []corev1.Container{
 						{
 							Name:            "mqtt-bridge",
-							Image:           "quay.io/infinimesh/mqtt-bridge:latest",
+							Image:           "quay.io/infinimesh/mqtt-bridge:infinidev",
 							ImagePullPolicy: corev1.PullAlways,
 							VolumeMounts: []corev1.VolumeMount{
 								{

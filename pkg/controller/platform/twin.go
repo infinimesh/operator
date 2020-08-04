@@ -39,7 +39,7 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 						Containers: []corev1.Container{
 							{
 								Name:            "shadow-delta-merger",
-								Image:           "quay.io/infinimesh/shadow-delta-merger:latest",
+								Image:           "quay.io/infinimesh/shadow-delta-merger:infinidev",
 								ImagePullPolicy: corev1.PullAlways,
 								Env: []corev1.EnvVar{
 									{
