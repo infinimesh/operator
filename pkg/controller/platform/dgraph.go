@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	defaultStorage = "10Gi"
+	defaultStorage = "3Gi"
 )
 
 func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, nodeserverClient nodepb.AccountServiceClient, log logr.Logger) error {
@@ -308,7 +308,7 @@ fi
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "datadir",
 						Annotations: map[string]string{
-							"volume.alpha.kubernetes.io/storage-class": "anything",
+							"volume.alpha.kubernetes.io/storage-class": "local-storage",
 						},
 					},
 					Spec: pvcSpec,
@@ -482,7 +482,7 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "datadir",
 						Annotations: map[string]string{
-							"volume.alpha.kubernetes.io/storage-class": "anything",
+							"volume.alpha.kubernetes.io/storage-class": "local-storage",
 						},
 					},
 					Spec: pvcSpec,
