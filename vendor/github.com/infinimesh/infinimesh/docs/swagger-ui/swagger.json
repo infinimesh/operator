@@ -3,14 +3,14 @@
   "info": {
     "title": "Infinimesh IoT Platform",
     "description": "Cloud Native IoT Platform",
-    "version": "0.0.8",
+    "version": "0.0.1",
     "contact": {
-      "name": "infinimesh",
-      "url": "https://infinimesh.io",
-      "email": "engineering@infinitedevices.io"
+      "name": "Infinimesh",
+      "url": "http://infinimesh.io",
+      "email": "joe@infinimesh.io"
     }
   },
-  "host": "api.ionos-iot.de",
+  "host": "api.infinimesh.io",
   "schemes": [
     "https"
   ],

@@ -1,0 +1,24 @@
+apiVersion: infinimesh.infinimesh.io/v1beta1
+kind: Platform
+metadata:
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: my-infinimesh
+spec:
+  kafka:
+    bootstrapServers: "my-kafka-instance.kafka.svc.cluster.local:9092"
+  mqtt:
+    secretName: "api-infinimesh-io-tls"
+  apiserver:
+    restful:
+      host: "api.infinimesh.io"
+      tls:
+        - hosts:
+          - "api.infinimesh.io"
+          secretName: "api-infinimesh-io-tls"
+    grpc:
+      host: "grpc.api.infinimesh.io"
+      tls:
+        - hosts:
+          - "grpc.api.infinimesh.io"
+          secretName: "api-infinimesh-io-tls"
