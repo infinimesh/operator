@@ -1,3 +1,20 @@
+//--------------------------------------------------------------------------
+// Copyright 2018 Infinite Devices GmbH
+// www.infinimesh.io
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
+//--------------------------------------------------------------------------
+
 package main
 
 import (
@@ -11,6 +28,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/cskr/pubsub"
@@ -156,20 +174,27 @@ func main() {
 		VerifyPeerCertificate: verify,
 		ClientAuth:            tls.RequireAnyClientCert, // Any Client Cert is OK in terms of what the go TLS package checks, further validation, e.g. if the cert belongs to a registered device, is performed in the VerifyPeerCertificate function
 	})
-
 	if err != nil {
 		panic(err)
 	}
 
 	go readBackchannelFromKafka()
-
 	for {
 		conn, _ := tlsl.Accept() // nolint: gosec
-		err := conn.(*tls.Conn).Handshake()
-		if err != nil {
-			fmt.Println("Handshake of client failed", err)
+		timeout := time.Second / 2
+		errChannel := make(chan error, 2)
+		go func() {
+			errChannel <- conn.(*tls.Conn).Handshake()
+		}()
+		select {
+		case err := <-errChannel:
+			if err != nil {
+				fmt.Println("Handshake failed", err)
+			}
+		case <-time.After(timeout):
+			fmt.Println("Handshake failed due to timeout")
+			_ = conn.Close()
 		}
-
 		if len(conn.(*tls.Conn).ConnectionState().PeerCertificates) == 0 {
 			continue
 		}
@@ -199,14 +224,14 @@ func main() {
 
 }
 
-func handleBackChannel(c net.Conn, deviceID string, backChannel chan interface{}) {
+func handleBackChannel(c net.Conn, deviceID string, backChannel chan interface{}, protocolLevel byte) {
 	// Everything from this channel is "vetted", i.e. it's legit that this client is subscribed to the topic.
 	for message := range backChannel {
 		m := message.(*mqtt.OutgoingMessage)
 		// TODO PacketID
 		topic := fqTopic(m.DeviceID, m.SubPath)
 		fmt.Println("Publish to topic ", topic, "of client", deviceID)
-		p := packet.NewPublish(topic, uint16(0), m.Data)
+		p := packet.NewPublish(topic, uint16(0), m.Data, protocolLevel)
 		_, err := p.WriteTo(c)
 		if err != nil {
 			panic(err)
@@ -238,7 +263,7 @@ func printConnState(con net.Conn) {
 
 // Connection is expected to be valid & legitimate at this point
 func handleConn(c net.Conn, deviceIDs []string) {
-	p, err := packet.ReadPacket(c)
+	p, err := packet.ReadPacket(c, 0)
 
 	if debug {
 		printConnState(c)
@@ -267,13 +292,19 @@ func handleConn(c net.Conn, deviceIDs []string) {
 		clientIDOK = true
 		deviceID = deviceIDs[0]
 	} else {
-		for _, possibleID := range deviceIDs {
-			if connectPacket.ConnectPayload.ClientID == possibleID {
-				fmt.Printf("Using ClientID: %v\n", possibleID)
-				clientIDOK = true
-				deviceID = possibleID
+		fmt.Printf("Client used duplicate fingerprint, Please use unique certificate for your device\n")
+		_ = c.Close()
+		return
+		//TODO : when multiple devices have single fingerprint authentication
+		/*
+			for _, possibleID := range deviceIDs {
+				if connectPacket.ConnectPayload.ClientID == possibleID {
+					fmt.Printf("Using ClientID: %v\n", possibleID)
+					clientIDOK = true
+					deviceID = possibleID
+				}
 			}
-		}
+		*/
 	}
 
 	if !clientIDOK {
@@ -282,7 +313,7 @@ func handleConn(c net.Conn, deviceIDs []string) {
 		return
 
 	}
-
+	//TODO : MQTT CONNACK Properties need to add here
 	resp := packet.ConnAckControlPacket{
 		FixedHeader: packet.FixedHeader{
 			ControlPacketType: packet.CONNACK,
@@ -294,7 +325,7 @@ func handleConn(c net.Conn, deviceIDs []string) {
 
 	// Create empty subscription
 	backChannel := ps.Sub()
-	go handleBackChannel(c, deviceID, backChannel)
+	go handleBackChannel(c, deviceID, backChannel, connectPacket.VariableHeader.ProtocolLevel)
 	defer func() {
 		fmt.Printf("Unsubbed channel %v\n", deviceID)
 		ps.Unsub(backChannel)
@@ -305,9 +336,11 @@ func handleConn(c net.Conn, deviceIDs []string) {
 		fmt.Println("Failed to write ConnAck. Closing connection.")
 		return
 	}
+	var topicAliasPublishMap map[string]int
+	topicAliasPublishMap = make(map[string]int)
 
 	for {
-		p, err := packet.ReadPacket(c)
+		p, err := packet.ReadPacket(c, connectPacket.VariableHeader.ProtocolLevel)
 		if err != nil {
 			if err == io.EOF {
 				fmt.Printf("Client closed connection.\n")
@@ -326,39 +359,65 @@ func handleConn(c net.Conn, deviceIDs []string) {
 				fmt.Println("Failed to write PingResp", err)
 			}
 		case *packet.PublishControlPacket:
-			err = handlePublish(p, c, deviceID)
+			topicAliasPublishMap, err = handlePublish(p, c, deviceID, topicAliasPublishMap)
 			if err != nil {
 				fmt.Printf("Failed to handle Publish packet: %v.", err)
 			}
 		case *packet.SubscribeControlPacket:
-			response := packet.NewSubAck(uint16(p.VariableHeader.PacketID), []byte{1})
+			response := packet.NewSubAck(uint16(p.VariableHeader.PacketID), connectPacket.VariableHeader.ProtocolLevel, []byte{1})
 			_, err := response.WriteTo(c)
 			if err != nil {
 				fmt.Println("Failed to write SubAck:", err)
 			}
-
 			for _, sub := range p.Payload.Subscriptions {
 				ps.AddSub(backChannel, sub.Topic)
+				go handleBackChannel(c, deviceID, backChannel, connectPacket.VariableHeader.ProtocolLevel)
 				fmt.Println("Added Subscription", sub.Topic, deviceID)
+			}
+		case *packet.UnsubscribeControlPacket:
+			response := packet.NewUnSubAck(uint16(p.VariableHeader.PacketID), connectPacket.VariableHeader.ProtocolLevel, []byte{1})
+			_, err := response.WriteTo(c)
+			if err != nil {
+				fmt.Println("Failed to write UnSubAck:", err)
+			}
+			for _, unsub := range p.Payload.UnSubscriptions {
+				ps.Unsub(backChannel, unsub.Topic)
+				fmt.Println("Removed Subscription", unsub.Topic, deviceID)
 			}
 		}
 	}
 }
 
-func handlePublish(p *packet.PublishControlPacket, c net.Conn, deviceID string) error {
+func handlePublish(p *packet.PublishControlPacket, c net.Conn, deviceID string, topicAliasPublishMap map[string]int) (map[string]int, error) {
 	fmt.Println("Handle publish", deviceID, p.VariableHeader.Topic, string(p.Payload))
-	if err := publishTelemetry(p.VariableHeader.Topic, p.Payload, deviceID); err != nil {
-		return err
+	if p.VariableHeader.PublishProperties.TopicAlias > 0 {
+		if val, ok := topicAliasPublishMap[p.VariableHeader.Topic]; ok {
+			if val == p.VariableHeader.PublishProperties.TopicAlias {
+				if err := publishTelemetry(p.VariableHeader.Topic, p.Payload, deviceID); err != nil {
+					return topicAliasPublishMap, err
+				}
+			} else {
+				fmt.Printf("Please use the correct topic alias")
+			}
+		} else {
+			topicAliasPublishMap[p.VariableHeader.Topic] = p.VariableHeader.PublishProperties.TopicAlias
+			if err := publishTelemetry(p.VariableHeader.Topic, p.Payload, deviceID); err != nil {
+				return topicAliasPublishMap, err
+			}
+		}
+	} else {
+		if err := publishTelemetry(p.VariableHeader.Topic, p.Payload, deviceID); err != nil {
+			return topicAliasPublishMap, err
+		}
 	}
 	if p.FixedHeaderFlags.QoS >= packet.QoSLevelAtLeastOnce {
 		pubAck := packet.NewPubAckControlPacket(uint16(p.VariableHeader.PacketID)) // TODO better always use directly uint16 for PacketIDs,everywhere
 		_, err := pubAck.WriteTo(c)
 		if err != nil {
-			return err
+			return topicAliasPublishMap, err
 		}
-
 	}
-	return nil
+	return topicAliasPublishMap, nil
 }
 
 func publishTelemetry(topic string, data []byte, deviceID string) error {

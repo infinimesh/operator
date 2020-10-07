@@ -1,7 +1,25 @@
+//--------------------------------------------------------------------------
+// Copyright 2018 Infinite Devices GmbH
+// www.infinimesh.io
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
+//--------------------------------------------------------------------------
+
 package dgraph
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 
@@ -112,6 +130,46 @@ func NameExists(ctx context.Context, txn *dgo.Txn, name, namespace, parent strin
 	return len(result.Object) > 0
 }
 
+func FingerprintExists(ctx context.Context, txn *dgo.Txn, fingerprint []byte) bool { //nolint
+	q := `query devices($fingerprint: string){
+		devices(func: eq(fingerprint, $fingerprint)) @normalize {
+		  ~certificates {
+			uid : uid
+			name : name
+			enabled : enabled
+			~owns {
+			  namespace: name
+			}
+		  }
+		}
+	  }
+		`
+
+	vars := map[string]string{
+		"$fingerprint": base64.StdEncoding.EncodeToString(fingerprint),
+	}
+	resp, err := txn.QueryWithVars(ctx, q, vars)
+	if err != nil {
+		return false
+	}
+
+	var result struct {
+		Devices []struct {
+			UID       string `json:"uid"`
+			Name      string `json:"name"`
+			Enabled   bool   `json:"enabled"`
+			Namespace string `json:"namespace"`
+		} `json:"devices"`
+	}
+
+	err = json.Unmarshal(resp.Json, &result)
+	if err != nil {
+		return false
+	}
+
+	return len(result.Devices) > 0
+}
+
 func CheckExists(ctx context.Context, txn *dgo.Txn, uid string) bool { //nolint
 	q := `query object($_uid: string) {
                 object(func: uid($_uid)) {
@@ -138,7 +196,7 @@ func CheckExists(ctx context.Context, txn *dgo.Txn, uid string) bool { //nolint
 	return len(result.Object) > 0
 }
 
-func (s *DGraphRepo) AuthorizeNamespace(ctx context.Context, account, namespace string, action nodepb.Action) (err error) {
+func (s *DGraphRepo) AuthorizeNamespace(ctx context.Context, account, namespaceID string, action nodepb.Action) (err error) {
 	txn := s.Dg.NewTxn()
 
 	if ok := checkType(ctx, txn, account, "account"); !ok {
@@ -146,7 +204,7 @@ func (s *DGraphRepo) AuthorizeNamespace(ctx context.Context, account, namespace 
 	}
 
 	// TODO use internal method that runs within txn
-	ns, err := s.GetNamespace(ctx, namespace)
+	ns, err := s.GetNamespaceID(ctx, namespaceID)
 	if err != nil {
 		return err
 	}
@@ -227,19 +285,20 @@ func (s *DGraphRepo) Authenticate(ctx context.Context, username, password string
 	return false, "", "", errors.New("Invalid credentials")
 }
 
-func (s *DGraphRepo) SetPassword(ctx context.Context, account, password string) error {
+//SetPassword is a method to change the password of the user account
+func (s *DGraphRepo) SetPassword(ctx context.Context, accountid, password string) error {
 	txn := s.Dg.NewTxn()
-	const q = `query accounts($account: string) {
-                     accounts(func: eq(name, $account)) @filter(eq(type, "account"))  {
+	const q = `query accounts($accountid: string) {
+                     accounts(func: uid($accountid)) @filter(eq(type, "account"))  {
                        uid
                        has.credentials {
-                         name @filter(eq(username, $account))
+                         name
                          uid
                        }
                      }
                    }`
 
-	response, err := txn.QueryWithVars(ctx, q, map[string]string{"$account": account})
+	response, err := txn.QueryWithVars(ctx, q, map[string]string{"$accountid": accountid})
 	if err != nil {
 		return err
 	}
@@ -258,7 +317,7 @@ func (s *DGraphRepo) SetPassword(ctx context.Context, account, password string) 
 	}
 
 	if len(result.Account[0].HasCredentials) == 0 {
-		return errors.New("No credentials found")
+		return errors.New("The account doesnot have credentials. Please set credential node.")
 	}
 
 	_, err = txn.Mutate(ctx, &api.Mutation{
@@ -368,7 +427,8 @@ func (s *DGraphRepo) CreateNamespace(ctx context.Context, name string) (id strin
 	return assigned.GetUids()["namespace"], nil
 }
 
-func (s *DGraphRepo) GetNamespace(ctx context.Context, namespaceID string) (namespace *nodepb.Namespace, err error) {
+//GetNamespace is a method to get the namespace based on ID
+func (s *DGraphRepo) GetNamespace(ctx context.Context, namespacename string) (namespace *nodepb.Namespace, err error) {
 	const q = `query getNamespaces($namespace: string) {
                      namespaces(func: eq(name, $namespace)) @filter(eq(type, "namespace"))  {
 	               uid
@@ -376,7 +436,7 @@ func (s *DGraphRepo) GetNamespace(ctx context.Context, namespaceID string) (name
 	             }
                    }`
 
-	res, err := s.Dg.NewReadOnlyTxn().QueryWithVars(ctx, q, map[string]string{"$namespace": namespaceID})
+	res, err := s.Dg.NewReadOnlyTxn().QueryWithVars(ctx, q, map[string]string{"$namespace": namespacename})
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +456,39 @@ func (s *DGraphRepo) GetNamespace(ctx context.Context, namespaceID string) (name
 		}, nil
 	}
 
-	return nil, errors.New("Namespace not found")
+	return nil, errors.New("The Namespace is not found")
+}
+
+//GetNamespaceID is a method to get the namespace based on ID
+func (s *DGraphRepo) GetNamespaceID(ctx context.Context, namespaceID string) (namespace *nodepb.Namespace, err error) {
+	const q = `query getNamespaces($namespaceid: string) {
+                     namespaces(func: uid($namespaceid)) @filter(eq(type, "namespace"))  {
+	               uid
+                       name
+	             }
+                   }`
+
+	res, err := s.Dg.NewReadOnlyTxn().QueryWithVars(ctx, q, map[string]string{"$namespaceid": namespaceID})
+	if err != nil {
+		return nil, err
+	}
+
+	var resultSet struct {
+		Namespaces []*Namespace `json:"namespaces"`
+	}
+
+	if err := json.Unmarshal(res.Json, &resultSet); err != nil {
+		return nil, err
+	}
+
+	if len(resultSet.Namespaces) > 0 {
+		return &nodepb.Namespace{
+			Id:   resultSet.Namespaces[0].UID,
+			Name: resultSet.Namespaces[0].Name,
+		}, nil
+	}
+
+	return nil, errors.New("The Namespace is not found")
 }
 
 func (s *DGraphRepo) IsAuthorized(ctx context.Context, node, account, action string) (decision bool, err error) {

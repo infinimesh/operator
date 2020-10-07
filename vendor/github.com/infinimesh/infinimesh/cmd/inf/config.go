@@ -1,3 +1,20 @@
+//--------------------------------------------------------------------------
+// Copyright 2018 Infinite Devices GmbH
+// www.infinimesh.io
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
+//--------------------------------------------------------------------------
+
 package main
 
 import (
@@ -5,6 +22,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"io/ioutil"
 
 	"github.com/manifoldco/promptui"
 	homedir "github.com/mitchellh/go-homedir"
@@ -24,11 +43,13 @@ type Context struct {
 	TLS              bool   `yaml:"tls"`
 	Token            string `yaml:"token,omitempty"`
 	DefaultNamespace string `yaml:"defaultNamespace,omitempty"`
+	CaCert           string `yaml:"cacert,omitempty"`
 }
 
 var (
 	apiserverFlag string
 	tlsFlag       bool
+	caFileFlag    string
 )
 
 func init() {
@@ -37,6 +58,7 @@ func init() {
 	configCmd.AddCommand(configSelectContext)
 	configSetContextCmd.Flags().StringVar(&apiserverFlag, "apiserver", "grpc.infinimesh.io:443", "Infinimesh APIServer. Defaults to grpc.infinimesh.io:443")
 	configSetContextCmd.Flags().BoolVar(&tlsFlag, "tls", true, "Enable or disable TLS. Defaults to true.")
+	configSetContextCmd.Flags().StringVar(&caFileFlag, "ca-file", "", "Path to CA certificate. optional.")
 }
 
 var configCmd = &cobra.Command{
@@ -80,11 +102,22 @@ var configSetContextCmd = &cobra.Command{
 		if config == nil {
 			config = &Config{}
 		}
+
 		newCtx := &Context{
 			Name:   args[0],
 			Server: apiserverFlag,
 			TLS:    tlsFlag,
 		}
+
+		if caFileFlag != "" {
+			cacert, err := ioutil.ReadFile(caFileFlag)
+			if err != nil {
+				fmt.Printf("Could not read ca certificate: %v\n", err)
+				os.Exit(1)
+			}
+			newCtx.CaCert = string(cacert)
+		}
+
 		var replaced bool
 		for i, ctx := range config.Contexts {
 			if ctx.Name == args[0] {

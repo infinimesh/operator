@@ -1,3 +1,20 @@
+//--------------------------------------------------------------------------
+// Copyright 2018 Infinite Devices GmbH
+// www.infinimesh.io
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
+//--------------------------------------------------------------------------
+
 package main
 
 import (
@@ -5,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 
 	"strconv"
 
@@ -25,10 +43,13 @@ import (
 	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
 	"github.com/infinimesh/infinimesh/pkg/registry/registrypb"
 	"github.com/infinimesh/infinimesh/pkg/shadow/shadowpb"
+	"robpike.io/filter"
 )
 
 const (
-	accountIDClaim = "account_id"
+	accountIDClaim       = "account_id"
+	tokenRestrictedClaim = "restricted"
+	expiresAt            = "exp"
 )
 
 var (
@@ -43,7 +64,11 @@ var (
 	log *zap.Logger
 )
 
-var jwtAuth = func(ctx context.Context) (context.Context, error) {
+var jwtAuthInterceptor = func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	if info.FullMethod == "/infinimesh.api.Accounts/Token" {
+		return handler(ctx, req)
+	}
+
 	tokenString, err := grpc_auth.AuthFromMD(ctx, "bearer")
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, err.Error())
@@ -66,7 +91,7 @@ var jwtAuth = func(ctx context.Context) (context.Context, error) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		log.Info("Validated token", zap.Any("claims", claims))
+		log.Info("GRPC API Server", zap.String("Validated token", "Function Invoked"), zap.Any("Claims", claims))
 
 		if accountID, ok := claims[accountIDClaim]; ok {
 
@@ -80,8 +105,59 @@ var jwtAuth = func(ctx context.Context) (context.Context, error) {
 					return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("Account is disabled"))
 				}
 
-				newCtx := context.WithValue(ctx, accountIDClaim, accountID)
-				return newCtx, nil
+				ctx = context.WithValue(ctx, accountIDClaim, accountID)
+
+				if restricted, ok := claims[tokenRestrictedClaim]; ok && restricted.(bool) {
+					log.Info("Token is restricted", zap.Any("restricted", restricted))
+
+					fullMethod := strings.Split(info.FullMethod, "/")
+					reqNS, reqMethod := fullMethod[1], fullMethod[2]
+					for ns, ids := range claims {
+						if reqNS == ns {
+							idSet := make(map[string]bool)
+							if ids != nil {
+								for _, id := range ids.([]interface{}) {
+									idSet[id.(string)] = true
+								}
+							}
+							if reqMethod == "List" {
+								r, err := handler(ctx, req)
+								if err != nil {
+									return r, err
+								}
+								if ids != nil {
+									switch reqNS {
+									case "infinimesh.api.Devices":
+										res := r.(*registrypb.ListResponse)
+										res.Devices = filter.Choose(res.Devices, func(el *registrypb.Device) bool { return idSet[el.Id] }).([]*registrypb.Device)
+										r = res
+									case "infinimesh.api.Accounts":
+										res := r.(*nodepb.ListAccountsResponse)
+										res.Accounts = filter.Choose(res.Accounts, func(el *nodepb.Account) bool { return idSet[el.Uid] }).([]*nodepb.Account)
+										r = res
+									case "infinimesh.api.Namespaces":
+										res := r.(*nodepb.ListNamespacesResponse)
+										res.Namespaces = filter.Choose(res.Namespaces, func(el *nodepb.Namespace) bool { return idSet[el.Id] }).([]*nodepb.Namespace)
+										r = res
+									case "infinimesh.api.Objects":
+										res := r.(*nodepb.ListObjectsResponse)
+										res.Objects = filter.Choose(res.Objects, func(el *nodepb.Object) bool { return idSet[el.Uid] }).([]*nodepb.Object)
+										r = res
+									}
+								}
+								return r, err
+							} else if reqMethod == "Get" {
+								if ids == nil || idSet[req.(map[string]interface{})["id"].(string)] {
+									return handler(ctx, req)
+								}
+							}
+							return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("Method is restricted"))
+						}
+					}
+					return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("Method is restricted"))
+				}
+
+				return handler(ctx, req)
 			}
 
 		}
@@ -102,8 +178,6 @@ func init() {
 	shadowHost = viper.GetString("SHADOW_HOST")
 	nodeHost = viper.GetString("NODE_HOST")
 	port = viper.GetInt("PORT")
-
-	jwtSigningSecret = []byte("super secret key")
 
 	b64SignSecret := viper.GetString("JWT_SIGNING_KEY")
 	if b64SignSecret == "" {
@@ -131,8 +205,7 @@ func main() {
 	}()
 
 	srv := grpc.NewServer(
-		grpc.StreamInterceptor(grpc_auth.StreamServerInterceptor(jwtAuth)),
-		grpc.UnaryInterceptor(grpc_auth.UnaryServerInterceptor(jwtAuth)),
+		grpc.UnaryInterceptor(jwtAuthInterceptor),
 	)
 
 	registryConn, err := grpc.Dial(registryHost, grpc.WithInsecure())
@@ -156,6 +229,9 @@ func main() {
 
 	namespaceClient := nodepb.NewNamespacesClient(nodeConn)
 
+	//Added logging
+	log.Info("GRPC API Server", zap.String("Starting GRPC Service", ""))
+
 	apipb.RegisterDevicesServer(srv, &deviceAPI{client: devicesClient, accountClient: accountClient})
 	apipb.RegisterStatesServer(srv, &shadowAPI{client: shadowClient, accountClient: accountClient})
 	apipb.RegisterAccountsServer(srv, &accountAPI{client: accountClient, signingSecret: jwtSigningSecret})
@@ -163,13 +239,19 @@ func main() {
 	apipb.RegisterNamespacesServer(srv, &namespaceAPI{client: namespaceClient, accountClient: accountClient})
 	listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
+		//Added logging
+		log.Error("GRPC API Server", zap.String("Unable to start GRPC Service", ""), zap.Error(err))
 		panic(err)
 	}
 
+	//Added logging
+	log.Info("GRPC API Server", zap.String("GRPC Service Started", ""))
 	reflection.Register(srv)
 
 	err = srv.Serve(listener)
 	if err != nil {
+		//Added logging
+		log.Error("GRPC API Server", zap.String("Unable to start GRPC Service", ""), zap.Error(err))
 		panic(err)
 	}
 

@@ -3,11 +3,11 @@
   "info": {
     "title": "Infinimesh IoT Platform",
     "description": "Cloud Native IoT Platform",
-    "version": "0.0.1",
+    "version": "0.0.8",
     "contact": {
-      "name": "Infinimesh",
-      "url": "http://infinimesh.io",
-      "email": "joe@infinimesh.io"
+      "name": "Infinite Devices GmbH.",
+      "url": "https://www.infinitedevices.io",
+      "email": "engineering@infinitedevices.io"
     }
   },
   "host": "api.infinimesh.io",
