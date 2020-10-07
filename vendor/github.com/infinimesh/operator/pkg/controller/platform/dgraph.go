@@ -45,11 +45,11 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 	}
 
 	_, err = nodeserverClient.SetPassword(context.TODO(), &nodepb.SetPasswordRequest{
-		Username: "root",
+		Username: "0x2",
 		Password: pw,
 	})
 	if err != nil {
-		log.Info("Failed to set pw. Have to create account", "err", err.Error())
+		log.Info("Failed to set pw.. Have to create account", "err", err.Error())
 	} else {
 		log.Info("Set Password to content of secret")
 	}
