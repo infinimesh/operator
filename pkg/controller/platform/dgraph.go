@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -37,6 +38,7 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 		Username: "root",
 		Password: pw,
 	})
+	log.Info("Temporary Logs", zap.Any("Password", pw))
 	if err != nil {
 		log.Info("Failed to auth with root. Try to create it", "error", err)
 	} else {
@@ -112,6 +114,7 @@ func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance
 		log.Info("gRPC dial OK")
 		nodeserverClient := nodepb.NewAccountServiceClient(nodeserverConn)
 
+		log.Info("Temporary Logs", zap.Any("Password", pw))
 		err = setPassword(instance, "root", pw, nodeserverClient, log.WithName("setPassword"))
 		if err != nil {
 			return err
