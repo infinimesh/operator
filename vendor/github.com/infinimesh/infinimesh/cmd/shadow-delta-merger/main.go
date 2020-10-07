@@ -1,27 +1,9 @@
-//--------------------------------------------------------------------------
-// Copyright 2018 Infinite Devices GmbH
-// www.infinimesh.io
-//
-//   Licensed under the Apache License, Version 2.0 (the "License");
-//   you may not use this file except in compliance with the License.
-//   You may obtain a copy of the License at
-//
-//       http://www.apache.org/licenses/LICENSE-2.0
-//
-//   Unless required by applicable law or agreed to in writing, software
-//   distributed under the License is distributed on an "AS IS" BASIS,
-//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//   See the License for the specific language governing permissions and
-//   limitations under the License.
-//--------------------------------------------------------------------------
-
 package main
 
 import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -45,7 +27,6 @@ var (
 )
 
 func init() {
-	sarama.Logger = log.New(os.Stdout, "", log.Ltime)
 	viper.SetDefault("KAFKA_HOST", "localhost:9092")
 	viper.AutomaticEnv()
 
@@ -55,7 +36,7 @@ func init() {
 func runMerger(inputTopic, outputTopic, realDeltaTopic, consumerGroup string, stop chan bool, ctx context.Context) (close io.Closer, done chan bool) {
 	done = make(chan bool)
 	consumerGroupClient := sarama.NewConfig()
-	consumerGroupClient.Version = sarama.V2_0_0_0
+	consumerGroupClient.Version = sarama.V1_0_0_0
 	consumerGroupClient.Consumer.Return.Errors = true
 	consumerGroupClient.Consumer.Offsets.Initial = sarama.OffsetOldest
 
@@ -82,7 +63,7 @@ func runMerger(inputTopic, outputTopic, realDeltaTopic, consumerGroup string, st
 	pconfig.Producer.Partitioner = sarama.NewManualPartitioner
 	pconfig.Producer.Return.Errors = false
 	pconfig.Producer.Return.Successes = false
-	pconfig.Version = sarama.V2_0_0_0
+	pconfig.Version = sarama.V1_1_0_0
 
 	producerClient, err := sarama.NewClient([]string{broker}, pconfig)
 	if err != nil {
@@ -90,11 +71,11 @@ func runMerger(inputTopic, outputTopic, realDeltaTopic, consumerGroup string, st
 	}
 
 	config := sarama.NewConfig()
-	config.Version = sarama.V2_0_0_0
+	config.Version = sarama.V1_0_0_0
 	config.Consumer.Return.Errors = false
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
-	//pconfig.Producer.Return.Errors = false
-	//pconfig.Producer.Return.Successes = false
+	pconfig.Producer.Return.Errors = false
+	pconfig.Producer.Return.Successes = false
 	config.Producer.RequiredAcks = sarama.WaitForAll // Wait for all in-sync replicas to ack the message
 	config.Producer.Retry.Max = 10                   // Retry up to 10 times to produce the message
 
@@ -114,6 +95,7 @@ func runMerger(inputTopic, outputTopic, realDeltaTopic, consumerGroup string, st
 	go func() {
 	outer:
 		for {
+
 			err = group.Consume(ctx, []string{inputTopic}, handler)
 			if err != nil {
 				panic(err)
@@ -143,7 +125,7 @@ func main() {
 
 	closeReported, doneReported := runMerger(topicReportedState, mergedTopicReported, topicComputedDeltaReportedState, consumerGroupReported, stopReported, ctx)
 	closeDesired, doneDesired := runMerger(topicDesiredState, mergedTopicDesired, topicComputedDeltaDesiredState, consumerGroupDesired, stopDesired, ctx)
-	//fmt.Printf("closeReported, doneReported: %v,%v", closeDesired, doneDesired)
+
 	// TODO consume from desired.delta and write to mqtt.messages.outgoing
 	// TODO adjust code to new topology
 

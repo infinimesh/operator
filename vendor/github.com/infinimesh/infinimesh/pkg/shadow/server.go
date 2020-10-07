@@ -1,20 +1,3 @@
-//--------------------------------------------------------------------------
-// Copyright 2018 Infinite Devices GmbH
-// www.infinimesh.io
-//
-//   Licensed under the Apache License, Version 2.0 (the "License");
-//   you may not use this file except in compliance with the License.
-//   You may obtain a copy of the License at
-//
-//       http://www.apache.org/licenses/LICENSE-2.0
-//
-//   Unless required by applicable law or agreed to in writing, software
-//   distributed under the License is distributed on an "AS IS" BASIS,
-//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//   See the License for the specific language governing permissions and
-//   limitations under the License.
-//--------------------------------------------------------------------------
-
 package shadow
 
 import (
@@ -125,6 +108,7 @@ func (s *Server) PatchDesiredState(context context.Context, req *shadowpb.PatchD
 }
 
 func (s *Server) StreamReportedStateChanges(request *shadowpb.StreamReportedStateChangesRequest, srv shadowpb.Shadows_StreamReportedStateChangesServer) (err error) {
+	fmt.Println("only", request.OnlyDelta)
 	// TODO validate request/Id
 
 	var subPathReported string
@@ -134,22 +118,8 @@ func (s *Server) StreamReportedStateChanges(request *shadowpb.StreamReportedStat
 		subPathReported = "/reported/full"
 	}
 
-	topicEvents := request.Id + subPathReported
-	events := s.PubSub.Sub(topicEvents)
-	defer func() {
-		fmt.Println("Dferer")
-		go func() {
-			s.PubSub.Unsub(events)
-		}()
-
-		// Drain
-
-		for range events {
-
-		}
-
-		fmt.Println("Drained channel")
-	}()
+	events := s.PubSub.Sub(request.Id + subPathReported)
+	defer s.PubSub.Unsub(events)
 
 	var subPathDesired string
 	if request.OnlyDelta {
@@ -158,31 +128,15 @@ func (s *Server) StreamReportedStateChanges(request *shadowpb.StreamReportedStat
 		subPathDesired = "/desired/full"
 	}
 
-	topicEventsDesired := request.Id + subPathDesired
-	eventsDesired := s.PubSub.Sub(topicEventsDesired)
-	defer func() {
-		fmt.Println("defer2")
-		go func() {
-			s.PubSub.Unsub(eventsDesired)
-		}()
+	eventsDesired := s.PubSub.Sub(request.Id + subPathDesired)
+	defer s.PubSub.Unsub(eventsDesired)
 
-		// Drain
-
-		for range eventsDesired {
-
-		}
-
-		fmt.Println("Drained channel")
-	}()
 outer:
 	for {
-
-		fmt.Println("Vor select")
 		select {
 		case reportedEvent := <-events:
 			value, err := toProto(reportedEvent)
 			if err != nil {
-				fmt.Println(err)
 				break outer
 			}
 
@@ -190,13 +144,11 @@ outer:
 				ReportedState: value,
 			})
 			if err != nil {
-				fmt.Println(err)
-				break outer
+				break
 			}
 		case desiredEvent := <-eventsDesired:
 			value, err := toProto(desiredEvent)
 			if err != nil {
-				fmt.Println(err)
 				break outer
 			}
 
@@ -204,13 +156,8 @@ outer:
 				DesiredState: value,
 			})
 			if err != nil {
-				fmt.Println(err)
-				break outer
+				break
 			}
-		case <-srv.Context().Done():
-			fmt.Println("DONE")
-			break outer
-
 		}
 
 	}

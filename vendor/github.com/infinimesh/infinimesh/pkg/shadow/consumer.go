@@ -1,20 +1,3 @@
-//--------------------------------------------------------------------------
-// Copyright 2018 Infinite Devices GmbH
-// www.infinimesh.io
-//
-//   Licensed under the Apache License, Version 2.0 (the "License");
-//   you may not use this file except in compliance with the License.
-//   You may obtain a copy of the License at
-//
-//       http://www.apache.org/licenses/LICENSE-2.0
-//
-//   Unless required by applicable law or agreed to in writing, software
-//   distributed under the License is distributed on an "AS IS" BASIS,
-//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//   See the License for the specific language governing permissions and
-//   limitations under the License.
-//--------------------------------------------------------------------------
-
 package shadow
 
 import (
@@ -69,9 +52,11 @@ func (c *StateMerger) fetchLocalState(client sarama.Client, partitions []int32) 
 		if err != nil {
 			return nil, nil, err
 		}
+
 		if newestOffset == 0 {
 			continue
 		}
+
 		for item := range pc.Messages() {
 			var st DeviceStateMessage
 
@@ -94,6 +79,7 @@ func (c *StateMerger) fetchLocalState(client sarama.Client, partitions []int32) 
 func (c *StateMerger) Setup(s sarama.ConsumerGroupSession) error {
 	fmt.Println("Rebalance, assigned partitions:", s.Claims())
 	c.localStates = make(map[int32]map[string]*DeviceStateMessage)
+
 	//TODO enforce co-partitioning
 
 	producer, err := sarama.NewAsyncProducerFromClient(c.ChangelogProducerClient)
@@ -102,15 +88,18 @@ func (c *StateMerger) Setup(s sarama.ConsumerGroupSession) error {
 	}
 
 	c.changelogProducer = producer
+
 	partitionsToFetch, ok := s.Claims()[c.SourceTopic]
 	if !ok {
 		fmt.Println("No partitions assigned. sleeping.")
 	}
+
 	start := time.Now()
 	localStates, _, err := c.fetchLocalState(c.ChangelogConsumerClient, partitionsToFetch)
 	if err != nil {
 		return err
 	}
+
 	c.localStates = localStates
 	// c.localStateMaxOffsets = offsets
 
@@ -118,7 +107,6 @@ func (c *StateMerger) Setup(s sarama.ConsumerGroupSession) error {
 	fmt.Println(localStates)
 	return nil
 }
-
 func (h *StateMerger) Cleanup(s sarama.ConsumerGroupSession) error {
 	fmt.Println("Cleaning consumer group session")
 
@@ -135,6 +123,7 @@ func (h *StateMerger) ConsumeClaim(sess sarama.ConsumerGroupSession, claim saram
 	h.m.Unlock()
 	for message := range claim.Messages() {
 		sess.MarkMessage(message, "")
+		fmt.Println("Recv message", string(message.Value))
 		key := string(message.Key)
 
 		var deviceState *DeviceStateMessage

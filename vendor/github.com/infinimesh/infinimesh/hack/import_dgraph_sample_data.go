@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"flag"
@@ -33,7 +32,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-	counter := 0
 
 	err := retry.Do(func() error {
 		conn, _ := grpc.Dial(dgraphURL, grpc.WithInsecure())
@@ -43,32 +41,23 @@ func main() {
 
 		repo := dgraph.NewDGraphRepo(dg)
 
-		counter++
-		fmt.Println("----------- Attempt " + strconv.Itoa(counter) + " -----------")
-
 		if drop {
 			err := dg.Alter(context.Background(), &api.Operation{DropAll: true})
 			if err != nil {
 				return err
 			}
-			fmt.Println("Dgraph Data Drop Successful")
+			fmt.Println("Dropped data")
 		}
 
-		err := dgraph.ImportSchema(dg, true)
-		if err != nil {
-			fmt.Println("Import failed with error: " + err.Error())
-			return err
-		}
-		fmt.Println("Dgraph Schema Import Successful")
+		_ = dgraph.ImportSchema(dg, true)
+		fmt.Println("Imported schema")
 
-		_, _, err = dgraph.ImportStandardSet(repo)
+		_, _, err := dgraph.ImportStandardSet(repo)
 		if err != nil {
-			fmt.Println("Import Standard set failed with error: " + err.Error())
 			return err
 		}
-		fmt.Println("Dgraph Test Data Import Successful")
 		return nil
-	}, retry.Delay(time.Second*2), retry.Attempts(5))
+	}, retry.Delay(time.Second*2), retry.Attempts(40))
 
 	if err != nil {
 		panic(err)

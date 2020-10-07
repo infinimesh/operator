@@ -220,7 +220,7 @@
     "pkg/node/nodepb",
   ]
   pruneopts = "T"
-  revision = "f487227b726fb58750522f3fea88d141aa24f7b7"
+  revision = "7ed571a5e7bf40813e539c7bc3558dc77307fbe4"
 
 [[projects]]
   branch = "master"
@@ -234,7 +234,7 @@
     "pkg/webhook",
   ]
   pruneopts = "T"
-  revision = "0351d95cff1561340aaa8f7b8a02e6456713decc"
+  revision = "5d840e5f83817ed1774db3b47d766beaf8a0bec9"
 
 [[projects]]
   digest = "1:ee5840274624ad20cac08227aeca582fbdaf3727ef9dd37ae935706240679e09"
