@@ -57,9 +57,10 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 	if err != nil {
 		respCreate, err := nodeserverClient.CreateUserAccount(context.TODO(), &nodepb.CreateUserAccountRequest{
 			Account: &nodepb.Account{
-				Name:    "root",
-				IsRoot:  true,
-				Enabled: true,
+				Name:     "root",
+				IsRoot:   true,
+				Enabled:  true,
+				Password: pw,
 			},
 			Password: pw,
 		})
