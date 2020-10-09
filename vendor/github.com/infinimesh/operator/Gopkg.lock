@@ -223,20 +223,6 @@
   revision = "7ed571a5e7bf40813e539c7bc3558dc77307fbe4"
 
 [[projects]]
-  branch = "master"
-  digest = "1:b6fd61d40f74a90209beb01e05bc39f0772cbe195239f0490f28f8351ddc8c71"
-  name = "github.com/infinimesh/operator"
-  packages = [
-    "pkg/apis",
-    "pkg/apis/infinimesh/v1beta1",
-    "pkg/controller",
-    "pkg/controller/platform",
-    "pkg/webhook",
-  ]
-  pruneopts = "T"
-  revision = "5d840e5f83817ed1774db3b47d766beaf8a0bec9"
-
-[[projects]]
   digest = "1:ee5840274624ad20cac08227aeca582fbdaf3727ef9dd37ae935706240679e09"
   name = "github.com/joho/godotenv"
   packages = ["."]
@@ -1034,14 +1020,8 @@
     "github.com/go-logr/logr",
     "github.com/infinimesh/infinimesh/pkg/node/dgraph",
     "github.com/infinimesh/infinimesh/pkg/node/nodepb",
-    "github.com/infinimesh/operator/pkg/apis",
-    "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1",
-    "github.com/infinimesh/operator/pkg/controller",
-    "github.com/infinimesh/operator/pkg/controller/platform",
-    "github.com/infinimesh/operator/pkg/webhook",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
-    "go.uber.org/zap",
     "golang.org/x/net/context",
     "google.golang.org/grpc",
     "k8s.io/api/apps/v1",
