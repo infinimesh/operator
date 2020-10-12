@@ -26,8 +26,6 @@ func ImportSchema(dg *dgo.Dgraph, drop bool) error {
   enabled: bool @index(bool) .
   isRoot: bool @index(bool) .
   isAdmin: bool @index(bool) .
-  markfordeletion: bool @index(bool) .
-  deleteinitiationtime: datetime @index(day) .
   action: string @index(term) .
   type: string @index(exact) .
   access.to: uid @reverse .
