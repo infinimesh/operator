@@ -257,6 +257,7 @@ spec:
         - name: SECRET_NAME
           value: infinimesh-webhook-server-secret
         image: quay.io/infinimesh/operator:infinidev
+
         imagePullPolicy: Always
         name: manager
         ports:
