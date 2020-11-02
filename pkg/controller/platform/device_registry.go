@@ -40,6 +40,8 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 								{
 									Name:  "DGRAPH_HOST",
 									Value: instance.Name + "-dgraph-alpha:9080", // TODO
+								},
+								{
 									Name:  "DB_HOST2",
 									Value: "10.233.72.9:6379", // TODO
 								},
