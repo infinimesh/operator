@@ -43,7 +43,7 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 								},
 								{
 									Name:  "DB_HOST2",
-									Value: 10.233.72.9:6379", // TODO
+									Value: "10.233.72.9:6379", // TODO
 								},
 							},
 							},
