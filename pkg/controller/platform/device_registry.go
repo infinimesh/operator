@@ -46,7 +46,6 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 									Value: "redisdb2-0.redisdb2.default.svc.cluster.local:6379", // TODO
 								},
 							},
-							},
 						},
 					},
 				},
