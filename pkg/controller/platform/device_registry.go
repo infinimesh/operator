@@ -41,6 +41,9 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 									Name:  "DGRAPH_HOST",
 									Value: instance.Name + "-dgraph-alpha:9080", // TODO
 								},
+								{       Name:  "DB_ADDR2",
+									Value: "redisdb2-0.redisdb2.default.svc.cluster.local:6379", // TODO
+								},
 							},
 						},
 					},
