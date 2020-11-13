@@ -34,12 +34,16 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 					Containers: []corev1.Container{
 						{
 							Name:            "device-registry",
-							Image:           "quay.io/infinimesh/device-registry:latest",
+							Image:           "quay.io/infinimesh/device-registry:infinidev",
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "DGRAPH_HOST",
 									Value: instance.Name + "-dgraph-alpha:9080", // TODO
+								},
+								{
+									Name:  "DB_ADDR2",
+									Value: "redisdb2-0.redisdb2.default.svc.cluster.local:6379", // TODO
 								},
 							},
 						},
