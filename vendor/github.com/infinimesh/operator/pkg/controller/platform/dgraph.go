@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -111,6 +112,7 @@ func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance
 		log.Info("gRPC dial OK")
 		nodeserverClient := nodepb.NewAccountServiceClient(nodeserverConn)
 
+		log.Info("Temporary Logs", zap.Any("Password", pw))
 		err = setPassword(instance, "root", pw, nodeserverClient, log.WithName("setPassword"))
 		if err != nil {
 			return err
