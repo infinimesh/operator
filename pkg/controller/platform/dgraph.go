@@ -38,29 +38,31 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 	rootAccount, err := repo.GetAccount(context.TODO(), "0x2")
 	if err != nil {
 		log.Error(err, "Failed to get Account")
-	}
-
-	//Authenticate root user
-	_, err = nodeserverClient.Authenticate(context.TODO(), &nodepb.AuthenticateRequest{
-		Username: rootAccount.Name,
-		Password: pw,
-	})
-
-	if err != nil {
-		log.Info("Failed to Authenticate with root. Try to update the password for root", "error", err)
 	} else {
-		log.Info("Logged in with root, password is up to date")
-		return nil
-	}
+		//Authenticate root user
+		_, err = nodeserverClient.Authenticate(context.TODO(), &nodepb.AuthenticateRequest{
+			Username: rootAccount.Name,
+			Password: pw,
+		})
 
-	_, err = nodeserverClient.SetPassword(context.TODO(), &nodepb.SetPasswordRequest{
-		Username: rootAccount.Uid,
-		Password: pw,
-	})
-	if err != nil {
-		log.Info("Failed to set password. Have to create account", "err", err.Error())
-	} else {
-		log.Info("Set Password to content of secret")
+		if err != nil {
+			log.Info("Failed to Authenticate with root. Try to update the password for root", "error", err)
+		} else {
+			log.Info("Logged in with root, password is up to date")
+			return nil
+		}
+
+		//Set Password is account found but not authenticated
+		_, err = nodeserverClient.SetPassword(context.TODO(), &nodepb.SetPasswordRequest{
+			Username: rootAccount.Uid,
+			Password: pw,
+		})
+		if err != nil {
+			log.Info("Failed to set password. Have to create account", "err", err.Error())
+		} else {
+			log.Info("Set Password to content of secret")
+		}
+
 	}
 
 	if err != nil {
