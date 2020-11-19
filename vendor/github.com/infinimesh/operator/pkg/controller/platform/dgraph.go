@@ -37,7 +37,7 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 
 	rootAccount, err := repo.GetAccount(context.TODO(), "0x2")
 	if err != nil {
-		log.Error(err, "Failed to get root Account")
+		log.Error(err, "Failed to get root Account.")
 	}
 
 	_, err = nodeserverClient.Authenticate(context.TODO(), &nodepb.AuthenticateRequest{
