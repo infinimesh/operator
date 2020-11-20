@@ -116,7 +116,7 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 				"terminationPolicy": "DoNotTerminate",
 			},
 		}
-		log.Info("Some random logs for testing")
+		log.Info("Some random logs for testing - Dummy")
 		if err := controllerutil.SetControllerReference(instance, pg, r.scheme); err != nil {
 			return err
 		}
