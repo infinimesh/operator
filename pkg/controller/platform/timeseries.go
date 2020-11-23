@@ -91,12 +91,20 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 			}
 		}
 	}
-
+	
 	{
+		var kubedbVersion string
+		envInfo := instance.Name
+		if instance.Name == "infinimesh-cloud"{
+			kubedbVersion = "v1alpha2"
+		}
+		else{
+			kubedbVersion = "v1alpha1"
+		}
 		pg := &unstructured.Unstructured{}
 		pg.Object = map[string]interface{}{
 			"kind":       "Postgres",
-			"apiVersion": "kubedb.com/v1alpha2",
+			"apiVersion": "kubedb.com/"+kubedbVersion,
 			"metadata": map[string]interface{}{
 				"name":      instance.Name + "-timescaledb",
 				"namespace": instance.Namespace,
