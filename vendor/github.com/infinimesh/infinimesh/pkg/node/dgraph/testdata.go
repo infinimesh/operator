@@ -55,7 +55,7 @@ func ImportStandardSet(repo node.Repo) (userID string, adminID string, err error
 	}
 
 	ns := "joe"
-	joe, err := repo.CreateUserAccount(context.Background(), "joe", "test123", false, true)
+	joe, err := repo.CreateUserAccount(context.Background(), "joe", "test123", true, true)
 	if err != nil {
 		return "", "", err
 	}
