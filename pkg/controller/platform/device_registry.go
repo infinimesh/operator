@@ -19,6 +19,7 @@ import (
 func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	log := logger.WithName("device-registry")
 	deploymentName := instance.Name + "-device-registry"
+
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
@@ -42,12 +43,8 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 									Value: instance.Name + "-dgraph-alpha:9080", // TODO
 								},
 								{
-									Name:  "DB_ADDR2",                                           // Second Redis DB
-									Value: "redisdb2-0.redisdb2.default.svc.cluster.local:6379", // TODO
-								},
-								{
-									Name:  "ENV_NAME",    // ENV_NAME
-									Value: instance.Name, // INSTANCE_NAME
+									Name:  "DB_ADDR2",                                   // Second Redis DB
+									Value: instance.Name + "-redis-device-details:6379", // TODO
 								},
 							},
 						},
