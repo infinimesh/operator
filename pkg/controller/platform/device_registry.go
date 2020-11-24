@@ -43,7 +43,7 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 								},
 								{
 									Name:  "DB_ADDR2",
-									Value: "redisdb2-0.redisdb2.default.svc.cluster.local:6379", // TODO
+									Value: instance.Name + "-redis-device-details-0:6379", // TODO
 								},
 							},
 						},
