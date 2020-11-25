@@ -43,8 +43,8 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 									Value: instance.Name + "-dgraph-alpha:9080", // TODO
 								},
 								{
-									Name:  "DB_ADDR2",                                   // Second Redis DB
-									Value: instance.Name + "-redis-device-details:6379", // TODO
+									Name:  "DB_ADDR2", // Second Redis DB
+									Value: instance.Name + "-redis-device-details:6379",
 								},
 							},
 						},
