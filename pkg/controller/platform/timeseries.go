@@ -94,8 +94,8 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 	}
 
 	{
-		GetConfigOrDie := config.GetConfigOrDie
-		GetConfig := config.GetConfig
+		GetConfigOrDie := config.GetConfigOrDie()
+		GetConfig := config.GetConfig()
 		log.Info("Ayesha GetConfigOrDie", GetConfigOrDie)
 		log.Info("Ayesha GetConfig", GetConfig)
 		log.Info("Dummy  commit to build")
