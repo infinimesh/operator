@@ -3,6 +3,7 @@ package platform
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -96,7 +97,8 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 	{
 		GetConfig, err := config.GetConfig()
 		if err != nil {
-			log.Fatal(err)
+			log.Error(err, "unable to get kubeconfig")
+			os.Exit(1)
 		}
 		log.Info("Ayesha GetConfig", GetConfig)
 		log.Info("dummy commit")
