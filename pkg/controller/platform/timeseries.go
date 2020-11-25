@@ -3,6 +3,7 @@ package platform
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -12,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -91,8 +93,18 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 			}
 		}
 	}
+	{
+		GetConfig, err := config.GetConfig()
+		if err != nil {
+			log.Error(err, "unable to get kubeconfig")
+			os.Exit(1)
+		}
+		log.Info("Ayesha GetConfig", GetConfig)
+		log.Info("dummy commit")
+	}
 
 	{
+
 		var kubedbVersion string
 		if instance.Name == "infinimesh-cloud" {
 			kubedbVersion = "v1alpha2"
