@@ -21,7 +21,6 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 	deploymentName := instance.Name + "-mqtt-bridge"
 	// TODO(user): Change this to be the object type created by your controller
 	// Define the desired Deployment object
-
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
