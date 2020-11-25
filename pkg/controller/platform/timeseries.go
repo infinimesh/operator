@@ -94,15 +94,10 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 	}
 
 	{
-		GetConfigOrDie, err := config.GetConfigOrDie()
-		if err != nil {
-			log.Fatal(err)
-		}
 		GetConfig, err := config.GetConfig()
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Info("Ayesha GetConfigOrDie", GetConfigOrDie)
 		log.Info("Ayesha GetConfig", GetConfig)
 		log.Info("dummy commit")
 
