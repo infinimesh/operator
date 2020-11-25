@@ -97,6 +97,7 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 			},
 		},
 	}
+
 	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
 		return err
 	}
