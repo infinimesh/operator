@@ -98,7 +98,7 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 		GetConfig := config.GetConfig
 		log.Info("Ayesha GetConfigOrDie", GetConfigOrDie)
 		log.Info("Ayesha GetConfig", GetConfig)
-		log.Info("Dummy commit to build")
+		log.Info("Dummy  commit to build")
 		var kubedbVersion string
 		if instance.Name == "infinimesh-cloud" {
 			kubedbVersion = "v1alpha2"
