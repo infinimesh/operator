@@ -55,7 +55,7 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 									Value: request.Name + "-device-registry:8080",
 								},
 								{
-									Name:  "DB_ADDR2", // Second Redis DB
+									Name:  "DB_ADDR2",
 									Value: instance.Name + "-redis-device-details:6379",
 								},
 							},
