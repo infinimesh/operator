@@ -19,7 +19,7 @@ import (
 func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	log := logger.WithName("Redis Device Details")
 
-	replicas := int32(3)
+	replicas := int32(1)
 
 	svc := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
