@@ -6,6 +6,8 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -16,9 +18,10 @@ import (
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
 
-func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
-	log := logger.WithName("device-registry")
-	deploymentName := instance.Name + "-device-registry"
+func (r *ReconcilePlatform) reconcileApiserverRest(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
+	log := logger.WithName("apiserver-rest")
+
+	deploymentName := instance.Name + "-apiserver-rest"
 
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -34,21 +37,13 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:            "device-registry",
-							Image:           "quay.io/infinimesh/device-registry:infinidev",
+							Name:            "apiserver-rest",
+							Image:           "quay.io/infinimesh/apiserver-rest:latest",
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{
-									Name:  "DGRAPH_HOST",
-									Value: instance.Name + "-dgraph-alpha:9080", // TODO
-								},
-								{
-									Name:  "DB_ADDR2",
-<<<<<<< HEAD
-									Value: instance.Name + "-redis-device-details:6379", // TODO
-=======
-									Value: instance.Name + "-redis-device-details:6379",
->>>>>>> e515ffb9469161624db4fa30e9536cafe7827c4b
+									Name:  "APISERVER_ENDPOINT",
+									Value: instance.Name + "-apiserver:8080",
 								},
 							},
 						},
@@ -96,7 +91,7 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 				{
 					Protocol:   corev1.ProtocolTCP,
 					Port:       8080,
-					TargetPort: intstr.FromInt(8080),
+					TargetPort: intstr.FromInt(8081),
 				},
 			},
 		},
@@ -110,6 +105,52 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 	err = r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, foundSvc)
 	if err != nil && errors.IsNotFound(err) {
 		err = r.Create(context.TODO(), svc)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	//TODO check if spec.apiserver.restful.tls exists
+	ingress := &extensionsv1beta1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName,
+			Namespace: instance.Namespace,
+			Annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
+			},
+		},
+		Spec: extensionsv1beta1.IngressSpec{
+			TLS: instance.Spec.Apiserver.Restful.TLS,
+			Rules: []extensionsv1beta1.IngressRule{
+				{
+					Host: instance.Spec.Apiserver.Restful.Host,
+					IngressRuleValue: extensionsv1beta1.IngressRuleValue{
+						HTTP: &extensionsv1beta1.HTTPIngressRuleValue{
+							Paths: []extensionsv1beta1.HTTPIngressPath{
+								{
+									Backend: extensionsv1beta1.IngressBackend{
+										ServiceName: instance.Name + "-apiserver-rest",
+										ServicePort: intstr.FromInt(8080),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(instance, ingress, r.scheme); err != nil {
+		return err
+	}
+
+	foundIngress := &extensionsv1beta1.Ingress{}
+	err = r.Get(context.TODO(), types.NamespacedName{Name: ingress.Name, Namespace: ingress.Namespace}, foundIngress)
+	if err != nil && errors.IsNotFound(err) {
+		err = r.Create(context.TODO(), ingress)
 		if err != nil {
 			return err
 		}

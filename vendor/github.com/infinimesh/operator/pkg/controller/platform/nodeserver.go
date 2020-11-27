@@ -16,10 +16,9 @@ import (
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
 
-func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
-	log := logger.WithName("device-registry")
-	deploymentName := instance.Name + "-device-registry"
-
+func (r *ReconcilePlatform) reconcileNodeserver(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
+	log := logger.WithName("nodeserver")
+	deploymentName := instance.Name + "-nodeserver"
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
@@ -34,21 +33,13 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:            "device-registry",
-							Image:           "quay.io/infinimesh/device-registry:infinidev",
+							Name:            "nodeserver",
+							Image:           "quay.io/infinimesh/nodeserver:latest",
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "DGRAPH_HOST",
 									Value: instance.Name + "-dgraph-alpha:9080", // TODO
-								},
-								{
-									Name:  "DB_ADDR2",
-<<<<<<< HEAD
-									Value: instance.Name + "-redis-device-details:6379", // TODO
-=======
-									Value: instance.Name + "-redis-device-details:6379",
->>>>>>> e515ffb9469161624db4fa30e9536cafe7827c4b
 								},
 							},
 						},
@@ -96,12 +87,11 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 				{
 					Protocol:   corev1.ProtocolTCP,
 					Port:       8080,
-					TargetPort: intstr.FromInt(8080),
+					TargetPort: intstr.FromInt(8082),
 				},
 			},
 		},
 	}
-
 	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
 		return err
 	}
