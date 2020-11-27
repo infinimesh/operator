@@ -28,16 +28,16 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      instance.Name + "-redis-device-details-test",
+			Name:      instance.Name + "-redis-device-details",
 			Namespace: instance.Namespace,
 			Labels: map[string]string{
-				"app": instance.Name + "-redis-device-details-test",
+				"app": instance.Name + "-redis-device-details",
 			},
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: "None",
 			Type:      corev1.ServiceTypeClusterIP,
-			Selector:  map[string]string{"app": instance.Name + "-redis-device-details-test"},
+			Selector:  map[string]string{"app": instance.Name + "-redis-device-details"},
 			Ports: []corev1.ServicePort{
 				{
 					Protocol:   corev1.ProtocolTCP,
@@ -79,17 +79,17 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 
 	statefulSetDeviceDetails := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      instance.Name + "-redis-device-details-test",
+			Name:      instance.Name + "-redis-device-details",
 			Namespace: instance.Namespace,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			ServiceName: instance.Name + "-redis-device-details-test",
+			ServiceName: instance.Name + "-redis-device-details",
 			Replicas:    &replicas,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": instance.Name + "-redis-device-details-test"}, // TODO
+				MatchLabels: map[string]string{"app": instance.Name + "-redis-device-details"}, // TODO
 			},
 			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": instance.Name + "-redis-device-details-test"}},
+				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": instance.Name + "-redis-device-details"}},
 				Spec: corev1.PodSpec{
 					Affinity: &corev1.Affinity{
 						PodAntiAffinity: &corev1.PodAntiAffinity{
@@ -103,7 +103,7 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 													Key:      "app",
 													Operator: metav1.LabelSelectorOpIn,
 													Values: []string{
-														instance.Name + "-redis-device-details-test",
+														instance.Name + "-redis-device-details",
 													},
 												},
 											},
@@ -116,7 +116,7 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 					},
 					Containers: []corev1.Container{
 						{
-							Name:            "redis-device-details-test",
+							Name:            "redis-device-details",
 							Image:           "redis:5.0.10",
 							ImagePullPolicy: corev1.PullAlways,
 							Ports: []corev1.ContainerPort{
@@ -138,16 +138,16 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 						},
 					},
 					TerminationGracePeriodSeconds: func() *int64 { val := int64(60); return &val }(),
-					Volumes: []corev1.Volume{
-						{
-							Name: "datadir",
-							VolumeSource: corev1.VolumeSource{
-								PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-									ClaimName: "datadir",
-								},
-							},
-						},
-					},
+					// Volumes: []corev1.Volume{
+					// 	{
+					// 		Name: "datadir",
+					// 		VolumeSource: corev1.VolumeSource{
+					// 			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					// 				ClaimName: "datadir",
+					// 			},
+					// 		},
+					// 	},
+					// },
 				},
 			},
 			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
