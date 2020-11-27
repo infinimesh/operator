@@ -66,7 +66,8 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 	var pvcSpec corev1.PersistentVolumeClaimSpec
 	if instance.Spec.DGraph.Storage == nil {
 		pvcSpec = corev1.PersistentVolumeClaimSpec{
-			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			StorageClassName: "ionos-enterprise-hdd",
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("1Gi")},
 			},
