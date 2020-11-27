@@ -178,12 +178,12 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
-	if err := r.reconcileTimeseries(request, instance); err != nil {
+	if err := r.reconcileDeviceDetails(request, instance); err != nil {
+		logger.Info("Redis device details function called - Ayesha")
 		return reconcile.Result{}, err
 	}
 
-	if err := r.reconcileDeviceDetails(request, instance); err != nil {
-		logger.Info("Redis device details function called - Ayesha")
+	if err := r.reconcileTimeseries(request, instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
