@@ -183,7 +183,9 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 	}
 
 	if err := r.reconcileDeviceDetails(request, instance); err != nil {
+		log.Info("Redis device details function called - Ayesha")
 		return reconcile.Result{}, err
 	}
+
 	return reconcile.Result{}, nil
 }
