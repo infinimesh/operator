@@ -22,6 +22,12 @@ func ImportSchema(dg *dgo.Dgraph, drop bool) error {
   tags: [string] .
   name: string @index(exact) .
   username: string @index(exact) .
+  enabled: bool @index(bool) .
+  isRoot: bool @index(bool) .
+  isAdmin: bool @index(bool) .
+  markfordeletion: bool @index(bool) .
+  deleteinitiationtime: datetime @index(day) .
+  retentionperiod: int @index(int) .
   action: string @index(term) .
   type: string @index(exact) .
   access.to: uid @reverse .
@@ -49,7 +55,7 @@ func ImportStandardSet(repo node.Repo) (userID string, adminID string, err error
 	}
 
 	ns := "joe"
-	joe, err := repo.CreateUserAccount(context.Background(), "joe", "test123", false, true)
+	joe, err := repo.CreateUserAccount(context.Background(), "joe", "test123", true, true)
 	if err != nil {
 		return "", "", err
 	}

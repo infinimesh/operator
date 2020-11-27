@@ -38,7 +38,7 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 						Containers: []corev1.Container{
 							{
 								Name:            "timescale-connector",
-								Image:           "quay.io/infinimesh/timescale-connector:infinidev",
+								Image:           "quay.io/infinimesh/timescale-connector:latest",
 								ImagePullPolicy: corev1.PullAlways,
 								EnvFrom: []corev1.EnvFromSource{
 									{
@@ -91,6 +91,7 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 			}
 		}
 	}
+
 	{
 		var kubedbVersion string
 		if instance.Name == "infinimesh-cloud" {
@@ -121,6 +122,7 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 				"terminationPolicy": "DoNotTerminate",
 			},
 		}
+
 		if err := controllerutil.SetControllerReference(instance, pg, r.scheme); err != nil {
 			return err
 		}

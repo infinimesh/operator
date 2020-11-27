@@ -16,9 +16,11 @@ import (
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
 )
 
-func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
-	log := logger.WithName("device-registry")
-	deploymentName := instance.Name + "-device-registry"
+func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
+	log := logger.WithName("mqtt-bridge")
+	deploymentName := instance.Name + "-mqtt-bridge"
+	// TODO(user): Change this to be the object type created by your controller
+	// Define the desired Deployment object
 
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -34,21 +36,37 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:            "device-registry",
-							Image:           "quay.io/infinimesh/device-registry:infinidev",
+							Name:            "mqtt-bridge",
+							Image:           "quay.io/infinimesh/mqtt-bridge:latest",
 							ImagePullPolicy: corev1.PullAlways,
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "cert",
+									MountPath: "/cert",
+								},
+							},
 							Env: []corev1.EnvVar{
 								{
-									Name:  "DGRAPH_HOST",
-									Value: instance.Name + "-dgraph-alpha:9080", // TODO
+									Name:  "KAFKA_HOST",
+									Value: instance.Spec.Kafka.BootstrapServers,
+								},
+								{
+									Name:  "DEVICE_REGISTRY_URL",
+									Value: request.Name + "-device-registry:8080",
 								},
 								{
 									Name:  "DB_ADDR2",
-<<<<<<< HEAD
-									Value: instance.Name + "-redis-device-details:6379", // TODO
-=======
-									Value: instance.Name + "-redis-device-details:6379",
->>>>>>> e515ffb9469161624db4fa30e9536cafe7827c4b
+									Value: instance.Name + "-redis-device-details:6379", //Second Redis DB
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "cert",
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: instance.Spec.MQTT.SecretName, // TODO make this configurable in the CRD
 								},
 							},
 						},
@@ -81,27 +99,29 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 				return err
 			}
 		}
-
 	}
 
 	svc := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
 			Namespace: instance.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: map[string]string{"deployment": deploymentName},
-			Type:     corev1.ServiceTypeClusterIP,
+			Type:     corev1.ServiceTypeLoadBalancer,
 			Ports: []corev1.ServicePort{
 				{
 					Protocol:   corev1.ProtocolTCP,
-					Port:       8080,
-					TargetPort: intstr.FromInt(8080),
+					Port:       8883,
+					TargetPort: intstr.FromInt(8089),
 				},
 			},
 		},
 	}
-
 	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
 		return err
 	}
@@ -118,5 +138,4 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 	}
 
 	return nil
-
 }
