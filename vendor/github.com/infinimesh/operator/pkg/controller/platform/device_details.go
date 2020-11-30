@@ -2,6 +2,10 @@ package platform
 
 import (
 	"context"
+<<<<<<< HEAD
+=======
+	"reflect"
+>>>>>>> 4bbd733 (Adding Redis Device Details)
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -177,6 +181,18 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 		}
 	} else if err != nil {
 		return err
+<<<<<<< HEAD
+=======
+	} else {
+		if !reflect.DeepEqual(statefulSetDeviceDetails.Spec, foundS.Spec) {
+			foundS.Spec = statefulSetDeviceDetails.Spec
+			log.Info("Updating statefulset", "namespace", statefulSetDeviceDetails.Namespace, "name", statefulSetDeviceDetails.Name)
+			err = r.Update(context.TODO(), foundS)
+			if err != nil {
+				return err
+			}
+		}
+>>>>>>> 4bbd733 (Adding Redis Device Details)
 	}
 
 	return nil
