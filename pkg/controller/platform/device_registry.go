@@ -44,11 +44,7 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 								},
 								{
 									Name:  "DB_ADDR2",
-<<<<<<< HEAD
 									Value: instance.Name + "-redis-device-details:6379", // TODO
-=======
-									Value: instance.Name + "-redis-device-details:6379",
->>>>>>> e515ffb9469161624db4fa30e9536cafe7827c4b
 								},
 							},
 						},
