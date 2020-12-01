@@ -194,6 +194,5 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 		}
 >>>>>>> 4bbd733 (Adding Redis Device Details)
 	}
-
 	return nil
 }
