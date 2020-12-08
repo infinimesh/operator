@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
@@ -26,6 +27,7 @@ import (
 	"github.com/infinimesh/infinimesh/pkg/node/dgraph"
 	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
+	"gopkg.in/robfig/cron.v2"
 )
 
 const (
@@ -85,7 +87,7 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 
 func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance *infinimeshv1beta1.Platform, repo node.Repo) error {
 	log := logger.WithName("rootpw")
-
+	log = logger.WithName("Ayesha-sync rootpw")
 	hostNodeserver := instance.Name + "-nodeserver." + instance.Namespace + ".svc.cluster.local:8080"
 	nodeserverConn, err := grpc.Dial(hostNodeserver, grpc.WithInsecure())
 	if err != nil {
@@ -537,6 +539,13 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 	if err != nil {
 		log.Error(err, "Failed to sync password")
 	}
+	c := cron.New()
+	c.AddFunc("@every 0h0m1s", r.syncRootPassword(request, instance, repo))
+	c.Start()
+	// Added time to see output
+	time.Sleep(10 * time.Second)
+
+	c.Stop() // Stop the scheduler (does not stop any jobs already running).
 
 	return nil
 }
