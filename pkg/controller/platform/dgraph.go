@@ -519,7 +519,7 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 	}
 
 	// TODO: install schema; then update status with that info
-	// TODO do this only if necessary
+	// TODO do this only if necessary -- commit to build
 	host := instance.Name + "-dgraph-alpha." + instance.Namespace + ".svc.cluster.local:9080"
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err != nil {
@@ -553,4 +553,5 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 	c.Stop() // Stop the scheduler (does not stop any jobs already running).
 
 	return nil
+
 }
