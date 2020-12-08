@@ -546,6 +546,7 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 			log.Error(err, "Failed to sync password")
 		}
 	})
+
 	c.Start()
 	// Added time to see output
 	time.Sleep(10 * time.Second)
