@@ -540,10 +540,10 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 		log.Error(err, "Failed to sync password")
 	}
 	c := cron.New()
-	c.AddFunc("@every 0h0m1s", func() {
+	c.AddFunc("@every 0h0m60s", func() {
 		err = r.syncRootPassword(request, instance, repo)
 		if err != nil {
-			log.Error(err, "Failed to sync password")
+			log.Error(err, "Failed to resync password")
 		}
 	})
 	c.Start()
