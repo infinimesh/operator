@@ -29,7 +29,7 @@ require (
 	github.com/infinimesh/infinimesh v0.1.4-0.20190416143604-7ed571a5e7bf
 	github.com/infinimesh/operator v0.0.0-20200219093753-5d840e5f8381
 	github.com/joho/godotenv v1.3.0 // indirect
-	github.com/json-iterator/go v1.1.6 // indirect
+	github.com/json-iterator/go v1.1.6 // indirect bb
 	github.com/markbates/inflect v1.0.4 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
