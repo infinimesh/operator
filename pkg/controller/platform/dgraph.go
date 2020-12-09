@@ -87,7 +87,6 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 
 func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance *infinimeshv1beta1.Platform, repo node.Repo) error {
 	log := logger.WithName("rootpw")
-	log = logger.WithName("Ayesha-sync rootpw")
 	hostNodeserver := instance.Name + "-nodeserver." + instance.Namespace + ".svc.cluster.local:8080"
 	nodeserverConn, err := grpc.Dial(hostNodeserver, grpc.WithInsecure())
 	if err != nil {
@@ -541,10 +540,11 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 	}
 	c := cron.New()
 	c.AddFunc("@every 0h0m60s", func() {
-		err = r.syncRootPassword(request, instance, repo)
-		if err != nil {
-			log.Error(err, "Failed to resync password")
-		}
+		// err = r.syncRootPassword(request, instance, repo)
+		// if err != nil {
+		// 	log.Error(err, "Failed to resync password")
+		// }
+		log.Info("Ayesha-every minute")
 	})
 	c.Start()
 	// Added time to see output
