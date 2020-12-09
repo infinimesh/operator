@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"time"
 
 	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
@@ -27,7 +26,6 @@ import (
 	"github.com/infinimesh/infinimesh/pkg/node/dgraph"
 	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
-	"gopkg.in/robfig/cron.v2"
 )
 
 const (
@@ -538,19 +536,6 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 	if err != nil {
 		log.Error(err, "Failed to sync password")
 	}
-	c := cron.New()
-	c.AddFunc("@every 0h0m60s", func() {
-		// err = r.syncRootPassword(request, instance, repo)
-		// if err != nil {
-		// 	log.Error(err, "Failed to resync password")
-		// }
-		log.Info("Ayesha-every minute")
-	})
-	c.Start()
-	// Added time to see output
-	time.Sleep(10 * time.Second)
-
-	c.Stop() // Stop the scheduler (does not stop any jobs already running).
 
 	return nil
 
