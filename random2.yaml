@@ -1,0 +1,20 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: delete-root-account-secret1
+  namespace: default
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: default
+          containers:
+          - name: kubectl
+            image: garland/kubectl:1.10.4
+            command:
+            - /bin/sh
+            - -c
+            - kubectl delete secret random -n default
+          restartPolicy: OnFailure
