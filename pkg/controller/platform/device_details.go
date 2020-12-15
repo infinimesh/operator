@@ -179,5 +179,4 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 		return err
 	}
 	return nil
-
 }
