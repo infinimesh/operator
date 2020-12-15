@@ -39,7 +39,7 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 						Containers: []corev1.Container{
 							{
 								Name:            "shadow-delta-merger",
-								Image:           "quay.io/infinimesh/shadow-delta-merger:latest",
+								Image:           "quay.io/infinimesh/shadow-delta-merger:infinidev",
 								ImagePullPolicy: corev1.PullAlways,
 								Env: []corev1.EnvVar{
 									{
@@ -138,6 +138,7 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 				found.Spec = deploy.Spec
 				log.Info("Updating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
 				err = r.Update(context.TODO(), found)
+				
 				if err != nil {
 					return err
 				}
@@ -165,7 +166,7 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 						Containers: []corev1.Container{
 							{
 								Name:            "shadow-api",
-								Image:           "quay.io/infinimesh/shadow-api:latest",
+								Image:           "quay.io/infinimesh/shadow-api:infinidev",
 								ImagePullPolicy: corev1.PullAlways,
 								Env: []corev1.EnvVar{
 									{
