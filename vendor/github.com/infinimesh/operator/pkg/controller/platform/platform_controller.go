@@ -178,6 +178,7 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
+<<<<<<< HEAD
 	if err := r.reconcileDeviceDetails(request, instance); err != nil {
 <<<<<<< HEAD
 		return reconcile.Result{}, err
@@ -189,6 +190,8 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
+=======
+>>>>>>> a2cdf8a (Migrate go dep to go mod)
 	if err := r.reconcileTimeseries(request, instance); err != nil {
 		return reconcile.Result{}, err
 	}

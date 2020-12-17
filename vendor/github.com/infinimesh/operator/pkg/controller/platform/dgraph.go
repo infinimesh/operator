@@ -22,7 +22,6 @@ import (
 
 	"strings"
 
-	"github.com/infinimesh/infinimesh/pkg/node"
 	"github.com/infinimesh/infinimesh/pkg/node/dgraph"
 	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
 	infinimeshv1beta1 "github.com/infinimesh/operator/pkg/apis/infinimesh/v1beta1"
@@ -32,49 +31,41 @@ const (
 	defaultStorage = "10Gi"
 )
 
-func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, nodeserverClient nodepb.AccountServiceClient, log logr.Logger, repo node.Repo) error {
+func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, nodeserverClient nodepb.AccountServiceClient, log logr.Logger) error {
 	// Try to login
-
-	rootAccount, err := repo.GetAccount(context.TODO(), "0x2")
+	_, err := nodeserverClient.Authenticate(context.TODO(), &nodepb.AuthenticateRequest{
+		Username: "root",
+		Password: pw,
+	})
 	if err != nil {
-		log.Error(err, "Failed to get Account")
+		log.Info("Failed to auth with root. Try to create it", "error", err)
 	} else {
-		//Authenticate root user
-		_, err = nodeserverClient.Authenticate(context.TODO(), &nodepb.AuthenticateRequest{
-			Username: rootAccount.Name,
-			Password: pw,
-		})
+		log.Info("Logged in with root, password is up to date")
+		return nil
+	}
 
-		if err != nil {
-			log.Info("Failed to Authenticate with root. Try to update the password for root", "error", err)
-		} else {
-			log.Info("Logged in with root, password is up to date")
-			return nil
-		}
-
-		//Set Password is account found but not authenticated
-		_, err = nodeserverClient.SetPassword(context.TODO(), &nodepb.SetPasswordRequest{
-			Username: rootAccount.Uid,
-			Password: pw,
-		})
-		if err != nil {
-			log.Info("Failed to set password. Have to create account", "err", err.Error())
-		} else {
-			log.Info("Set Password to content of secret")
-		}
-
+	_, err = nodeserverClient.SetPassword(context.TODO(), &nodepb.SetPasswordRequest{
+		Username: "root",
+		Password: pw,
+	})
+	if err != nil {
+		log.Info("Failed to set pw. Have to create account", "err", err.Error())
+	} else {
+		log.Info("Set Password to content of secret")
 	}
 
 	if err != nil {
-		accid, err := repo.CreateUserAccount(context.TODO(), "root", pw, true, true)
+		respCreate, err := nodeserverClient.CreateUserAccount(context.TODO(), &nodepb.CreateUserAccountRequest{
+			Account: &nodepb.Account{
+				Name:    "root",
+				IsRoot:  true,
+				Enabled: true,
+			},
+			Password: pw,
+		})
 		if err != nil {
 			log.Error(err, "Failed to create root account")
 			return err
-		}
-
-		respCreate, err := repo.GetAccount(context.TODO(), accid)
-		if err != nil {
-			log.Error(err, "Failed to get Account")
 		}
 
 		// Write event
@@ -83,7 +74,7 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 	return nil
 }
 
-func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance *infinimeshv1beta1.Platform, repo node.Repo) error {
+func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	log := logger.WithName("rootpw")
 	hostNodeserver := instance.Name + "-nodeserver." + instance.Namespace + ".svc.cluster.local:8080"
 	nodeserverConn, err := grpc.Dial(hostNodeserver, grpc.WithInsecure())
@@ -119,7 +110,7 @@ func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance
 		log.Info("gRPC dial OK")
 		nodeserverClient := nodepb.NewAccountServiceClient(nodeserverConn)
 
-		err = setPassword(instance, "root", pw, nodeserverClient, log.WithName("setPassword"), repo)
+		err = setPassword(instance, "root", pw, nodeserverClient, log.WithName("setPassword"))
 		if err != nil {
 			return err
 		}
@@ -145,7 +136,7 @@ func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance
 
 		secretStr := strings.Trim(string(secretB64), "\n")
 
-		err = setPassword(instance, "root", secretStr, nodeserverClient, log.WithName("setPassword"), repo)
+		err = setPassword(instance, "root", secretStr, nodeserverClient, log.WithName("setPassword"))
 		if err != nil {
 			return err
 		}
@@ -524,7 +515,6 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 	}
 
 	dg := dgo.NewDgraphClient(api.NewDgraphClient(conn))
-	repo := dgraph.NewDGraphRepo(dg)
 
 	err = dgraph.ImportSchema(dg, false)
 	if err != nil {
@@ -532,7 +522,7 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 	}
 	log.Info("Imported schema")
 
-	err = r.syncRootPassword(request, instance, repo)
+	err = r.syncRootPassword(request, instance)
 	if err != nil {
 		log.Error(err, "Failed to sync password")
 	}
