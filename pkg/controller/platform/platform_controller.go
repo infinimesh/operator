@@ -180,12 +180,15 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 
 	if err := r.reconcileDeviceDetails(request, instance); err != nil {
 <<<<<<< HEAD
+<<<<<<< HEAD
 		return reconcile.Result{}, err
 	}
 
 	if err := r.reconcileTimeseries(request, instance); err != nil {
 =======
 >>>>>>> 4bbd733 (Adding Redis Device Details)
+=======
+>>>>>>> 66a511df91d2a2a0d7ef7be7b27b764814dc199c
 		return reconcile.Result{}, err
 	}
 
