@@ -178,8 +178,8 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
-<<<<<<< HEAD
 	if err := r.reconcileDeviceDetails(request, instance); err != nil {
+<<<<<<< HEAD
 <<<<<<< HEAD
 		return reconcile.Result{}, err
 	}
@@ -187,11 +187,11 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 	if err := r.reconcileTimeseries(request, instance); err != nil {
 =======
 >>>>>>> 4bbd733 (Adding Redis Device Details)
+=======
+>>>>>>> 66a511df91d2a2a0d7ef7be7b27b764814dc199c
 		return reconcile.Result{}, err
 	}
 
-=======
->>>>>>> a2cdf8a (Migrate go dep to go mod)
 	if err := r.reconcileTimeseries(request, instance); err != nil {
 		return reconcile.Result{}, err
 	}
