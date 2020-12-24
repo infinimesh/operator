@@ -19,15 +19,8 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/infinimesh/infinimesh v0.1.4-0.20190416143604-7ed571a5e7bf
 	github.com/infinimesh/operator v0.0.0-20200219093753-5d840e5f8381
-<<<<<<< HEAD
-<<<<<<< HEAD
-	github.com/json-iterator/go v1.1.6 // indirect; indirect bb
-=======
 	github.com/json-iterator/go v1.1.6 // indirect
->>>>>>> a2cdf8a (Migrate go dep to go mod)
-=======
 	github.com/json-iterator/go v1.1.6 // indirect
->>>>>>> 66a511df91d2a2a0d7ef7be7b27b764814dc199c
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
