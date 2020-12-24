@@ -20,7 +20,6 @@ require (
 	github.com/infinimesh/infinimesh v0.1.4-0.20190416143604-7ed571a5e7bf
 	github.com/infinimesh/operator v0.0.0-20200219093753-5d840e5f8381
 	github.com/json-iterator/go v1.1.6 // indirect
-	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
