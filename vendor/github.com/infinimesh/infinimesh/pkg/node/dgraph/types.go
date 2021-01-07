@@ -1,35 +1,13 @@
-//--------------------------------------------------------------------------
-// Copyright 2018 Infinite Devices GmbH
-// www.infinimesh.io
-//
-//   Licensed under the Apache License, Version 2.0 (the "License");
-//   you may not use this file except in compliance with the License.
-//   You may obtain a copy of the License at
-//
-//       http://www.apache.org/licenses/LICENSE-2.0
-//
-//   Unless required by applicable law or agreed to in writing, software
-//   distributed under the License is distributed on an "AS IS" BASIS,
-//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//   See the License for the specific language governing permissions and
-//   limitations under the License.
-//--------------------------------------------------------------------------
-
 package dgraph
 
-//Node Data strcuture for Dgraph database
 type Node struct {
 	Type string `json:"type,omitempty"`
 	UID  string `json:"uid,omitempty"`
 }
 
-//Namespace Data structure for Dgraph database
 type Namespace struct {
 	Node
-	Name                 string `json:"name,omitempty"`
-	MarkForDeletion      bool   `json:"markfordeletion,omitempty"`
-	DeleteInitiationTime string `json:"deleteinitiationtime,omitempty"`
-	RetentionPeriod      int32  `json:"retentionperiod,omitempty"`
+	Name string `json:"name,omitempty"`
 
 	Owns []*Object `json:"owns,omitempty"`
 
@@ -37,13 +15,11 @@ type Namespace struct {
 	AccessToPermission string    `json:"access.to.namespace|permission,omitempty"`
 }
 
-//Account Data structure for Dgraph database
 type Account struct {
 	Node
 	Name string `json:"name,omitempty"`
 
 	IsRoot  bool `json:"isRoot"`
-	IsAdmin bool `json:"isAdmin"`
 	Enabled bool `json:"enabled"`
 
 	AccessTo          []*Object    `json:"access.to,omitempty"`
@@ -52,12 +28,8 @@ type Account struct {
 	DefaultNamespace []*Namespace `json:"default.namespace"`
 
 	HasCredentials []*UsernameCredential `json:"has.credentials,omitempty"`
-
-	Owns    []*Account `json:"owns,omitempty"`
-	OwnedBy []*Account `json:"~owns,omitempty"`
 }
 
-//UsernameCredential Data structure for Dgraph database
 type UsernameCredential struct {
 	Node
 	Username string     `json:"username"`
@@ -66,7 +38,6 @@ type UsernameCredential struct {
 	Account  []*Account `json:"~has.credentials,omitempty"`
 }
 
-//Object Data structure for Dgraph database
 type Object struct {
 	Node
 
