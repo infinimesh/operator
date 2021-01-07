@@ -5,7 +5,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"google.golang.org/infinimesh/grpc"
+	grpc "google.golang.org/grpc"
+	grpc_infinimesh "google.golang.org/infinimesh/grpc"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -86,7 +87,7 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance *infinimeshv1beta1.Platform, repo node.Repo) error {
 	log := logger.WithName("rootpw")
 	hostNodeserver := instance.Name + "-nodeserver." + instance.Namespace + ".svc.cluster.local:8080"
-	nodeserverConn, err := grpc.Dial(hostNodeserver, grpc.WithInsecure())
+	nodeserverConn, err := grpc_infinimesh.Dial(hostNodeserver, grpc_infinimesh.WithInsecure())
 	if err != nil {
 		return err
 	}
