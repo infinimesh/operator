@@ -38,7 +38,7 @@ func (r *ReconcilePlatform) reconcileApiserverRest(request reconcile.Request, in
 					Containers: []corev1.Container{
 						{
 							Name:            "apiserver-rest",
-							Image:           "quay.io/infinimesh/apiserver-rest:infinidev",
+							Image:           "quay.io/infinimesh/apiserver-rest:latest",
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{

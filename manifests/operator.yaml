@@ -256,7 +256,7 @@ spec:
               fieldPath: metadata.namespace
         - name: SECRET_NAME
           value: infinimesh-webhook-server-secret
-        image: quay.io/infinimesh/operator:infinidev
+        image: quay.io/infinimesh/operator:latest
 
         imagePullPolicy: Always
         name: manager
