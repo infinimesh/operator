@@ -16,6 +16,7 @@ func SetDefaults(m Message) {
 		setDefaults(MessageReflect(m))
 	}
 }
+
 func setDefaults(m protoreflect.Message) {
 	fds := m.Descriptor().Fields()
 	for i := 0; i < fds.Len(); i++ {
