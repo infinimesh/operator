@@ -38,7 +38,7 @@ func (r *ReconcilePlatform) reconcileFrontend(request reconcile.Request, instanc
 					Containers: []corev1.Container{
 						{
 							Name:            "frontend",
-							Image:           "quay.io/infinimesh/frontend:infinidev",
+							Image:           "quay.io/infinimesh/frontend:latest",
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{

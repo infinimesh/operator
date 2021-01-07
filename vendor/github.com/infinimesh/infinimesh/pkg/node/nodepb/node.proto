@@ -1,3 +1,20 @@
+//--------------------------------------------------------------------------
+// Copyright 2018 Infinite Devices GmbH
+// www.infinimesh.io
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
+//--------------------------------------------------------------------------
+
 syntax = "proto3";
 
 package infinimesh.node;
@@ -16,8 +33,19 @@ message IsRootRequest { string account = 1; }
 
 message IsRootResponse { bool is_root = 1; }
 
+message IsAdminRequest { string account = 1; }
+
+message IsAdminResponse { bool is_admin = 1; }
+
+message OwnershipRequest { 
+  string ownerid = 1; 
+  string accountid = 2;
+}
+
+message OwnershipResponse { }
+
 message IsAuthorizedNamespaceRequest {
-  string namespace = 1;
+  string namespaceid = 1;
   string account = 2;
   Action Action = 3;
 }
@@ -36,7 +64,8 @@ message IsAuthorizedResponse { google.protobuf.BoolValue decision = 1; }
 
 message CreateUserAccountRequest {
   Account account = 1;
-  string password = 2;
+  string password = 2; //To be Deprecated. Donot use this field. Instead use the password field in Account struct
+  bool create_gf_user = 4;
 }
 
 message CreateUserAccountResponse { string uid = 1; }
@@ -65,6 +94,9 @@ message Account {
   bool enabled = 4;
   Namespace default_namespace = 5;
   string password = 6;
+  bool is_admin = 7;
+  string owner = 8;
+  string username = 9;
 }
 
 message AuthenticateRequest {
@@ -90,7 +122,7 @@ message CreateObjectRequest {
   string name = 1;
   string parent = 2;
   string kind = 3;
-  string namespace = 4;
+  string namespaceid = 4;
 }
 
 message Object {
@@ -126,6 +158,8 @@ message UpdateAccountRequest {
   google.protobuf.FieldMask fieldMask = 2;
 }
 
+message UpdateAccountResponse {}
+
 message SetPasswordRequest {
   string username = 1;
   string password = 2;
@@ -134,26 +168,38 @@ message SetPasswordRequest {
 message SetPasswordResponse{
 }
 
+message DeleteAccountRequest {
+  string uid = 1;
+  bool harddelete = 2;
+}
+
+message DeleteAccountResponse {}
+
 service AccountService {
   rpc CreateUserAccount(CreateUserAccountRequest) returns (CreateUserAccountResponse);
-  rpc UpdateAccount(UpdateAccountRequest) returns (Account);
+  rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountResponse);
   rpc GetAccount(GetAccountRequest) returns (Account);
   rpc ListAccounts(ListAccountsRequest) returns (ListAccountsResponse);
   rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse);
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
 
   rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
   rpc IsAuthorized(IsAuthorizedRequest) returns (IsAuthorizedResponse);
-  rpc IsAuthorizedNamespace(IsAuthorizedNamespaceRequest)
-      returns (IsAuthorizedNamespaceResponse);
+  rpc IsAuthorizedNamespace(IsAuthorizedNamespaceRequest) returns (IsAuthorizedNamespaceResponse);
   rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
-  rpc AuthorizeNamespace(AuthorizeNamespaceRequest)
-      returns (AuthorizeNamespaceResponse);
+  rpc AuthorizeNamespace(AuthorizeNamespaceRequest) returns (AuthorizeNamespaceResponse);
   rpc IsRoot(IsRootRequest) returns (IsRootResponse);
+  rpc IsAdmin(IsAdminRequest) returns (IsAdminResponse);
+  rpc AssignOwner(OwnershipRequest) returns (OwnershipResponse);
+	rpc RemoveOwner(OwnershipRequest) returns (OwnershipResponse);
 }
 
 message Namespace {
   string id = 1;
   string name = 2;
+  bool markfordeletion = 3;
+  string deleteinitiationtime = 4;
+  int32 RetentionPeriod= 5;
 }
 
 message CreateNamespaceRequest {
@@ -197,6 +243,19 @@ message Permission {
   Action action = 4;
 }
 
+message DeleteNamespaceRequest {
+  string namespaceid = 1;
+  bool harddelete = 2;
+}
+
+message DeleteNamespaceResponse{}
+
+message UpdateNamespaceRequest {
+  Namespace namespace = 1;
+  google.protobuf.FieldMask namespaceMask = 2;
+}
+
+message UpdateNamespaceResponse {}
 
 service ObjectService {
   rpc CreateObject(CreateObjectRequest) returns (Object);
@@ -208,7 +267,8 @@ service Namespaces {
   rpc CreateNamespace(CreateNamespaceRequest) returns (Namespace);
   rpc GetNamespace(GetNamespaceRequest) returns (Namespace);
   rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse);
-  rpc ListNamespacesForAccount(ListNamespacesForAccountRequest) returns (ListNamespacesResponse);
   rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse);
   rpc DeletePermission(DeletePermissionRequest) returns (DeletePermissionResponse);
+  rpc DeleteNamespace(DeleteNamespaceRequest) returns (DeleteNamespaceResponse);
+  rpc UpdateNamespace(UpdateNamespaceRequest) returns (UpdateNamespaceResponse);
 }

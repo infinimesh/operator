@@ -37,7 +37,7 @@ func (r *ReconcilePlatform) reconcileTelemetryRouter(request reconcile.Request, 
 					Containers: []corev1.Container{
 						{
 							Name:            "telemetry-router",
-							Image:           "quay.io/infinimesh/telemetry-router:infinidev",
+							Image:           "quay.io/infinimesh/telemetry-router:latest",
 							ImagePullPolicy: corev1.PullAlways,
 							VolumeMounts: []corev1.VolumeMount{
 								{
