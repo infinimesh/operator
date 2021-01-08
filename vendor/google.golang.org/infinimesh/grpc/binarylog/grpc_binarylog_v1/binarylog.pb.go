@@ -735,9 +735,9 @@ func (m *Address) GetIpPort() uint32 {
 }
 
 func init() {
-	proto.RegisterEnum("grpc.binarylog.v1.GrpcLogEntry_EventType", GrpcLogEntry_EventType_name, GrpcLogEntry_EventType_value)
-	proto.RegisterEnum("grpc.binarylog.v1.GrpcLogEntry_Logger", GrpcLogEntry_Logger_name, GrpcLogEntry_Logger_value)
-	proto.RegisterEnum("grpc.binarylog.v1.Address_Type", Address_Type_name, Address_Type_value)
+	// proto.RegisterEnum("grpc.binarylog.v1.GrpcLogEntry_EventType", GrpcLogEntry_EventType_name, GrpcLogEntry_EventType_value)
+	// proto.RegisterEnum("grpc.binarylog.v1.GrpcLogEntry_Logger", GrpcLogEntry_Logger_name, GrpcLogEntry_Logger_value)
+	// proto.RegisterEnum("grpc.binarylog.v1.Address_Type", Address_Type_name, Address_Type_value)
 	proto.RegisterType((*GrpcLogEntry)(nil), "grpc.binarylog.v1.GrpcLogEntry")
 	proto.RegisterType((*ClientHeader)(nil), "grpc.binarylog.v1.ClientHeader")
 	proto.RegisterType((*ServerHeader)(nil), "grpc.binarylog.v1.ServerHeader")
