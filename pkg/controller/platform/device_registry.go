@@ -35,7 +35,7 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 					Containers: []corev1.Container{
 						{
 							Name:            "device-registry",
-							Image:           "quay.io/infinimesh/device-registry:latest",
+							Image:           "quay.io/infinimesh/device-registry:infinidev",
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{

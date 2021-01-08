@@ -5,7 +5,11 @@ import (
 	"encoding/base64"
 	"fmt"
 
+<<<<<<< HEAD
 	grpc "google.golang.org/grpc"
+=======
+	"google.golang.org/grpc"
+>>>>>>> parent of 9a86701 (Merge branch 'update-infinimesh-in-vendors' into infinidev)
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -66,7 +70,7 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 	}
 
 	if err != nil {
-		accid, err := repo.CreateUserAccount(context.TODO(), "root", pw, true, true, true)
+		accid, err := repo.CreateUserAccount(context.TODO(), "root", pw, true, true)
 		if err != nil {
 			log.Error(err, "Failed to create root account")
 			return err

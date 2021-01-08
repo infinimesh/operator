@@ -1,0 +1,24 @@
+<access.to.namespace>: uid @reverse .
+<access.to>: uid @reverse .
+<action>: string @index(term) .
+<algorithm>: string .
+<certificates>: uid @reverse .
+<children>: uid @reverse .
+<default.namespace>: uid .
+<deleteinitiationtime>: datetime @index(day) .
+<enabled>: bool @index(bool) .
+<fingerprint.algorithm>: string .
+<fingerprint>: string @index(exact) .
+<has.credentials>: uid @reverse .
+<isAdmin>: bool @index(bool) .
+<isRoot>: bool @index(bool) .
+<kind>: string @index(exact) .
+<markfordeletion>: bool @index(bool) .
+<name>: string @index(exact) .
+<owns>: uid @reverse .
+<password>: password .
+<pem_data>: string .
+<retentionperiod>: int @index(int) .
+<tags>: [string] .
+<type>: string @index(exact) .
+<username>: string @index(exact) .

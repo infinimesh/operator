@@ -38,7 +38,7 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 						Containers: []corev1.Container{
 							{
 								Name:            "timescale-connector",
-								Image:           "quay.io/infinimesh/timescale-connector:latest",
+								Image:           "quay.io/infinimesh/timescale-connector:infinidev",
 								ImagePullPolicy: corev1.PullAlways,
 								EnvFrom: []corev1.EnvFromSource{
 									{

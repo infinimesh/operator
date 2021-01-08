@@ -1,20 +1,3 @@
-//--------------------------------------------------------------------------
-// Copyright 2018 Infinite Devices GmbH
-// www.infinimesh.io
-//
-//   Licensed under the Apache License, Version 2.0 (the "License");
-//   you may not use this file except in compliance with the License.
-//   You may obtain a copy of the License at
-//
-//       http://www.apache.org/licenses/LICENSE-2.0
-//
-//   Unless required by applicable law or agreed to in writing, software
-//   distributed under the License is distributed on an "AS IS" BASIS,
-//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//   See the License for the specific language governing permissions and
-//   limitations under the License.
-//--------------------------------------------------------------------------
-
 package dgraph
 
 import (
@@ -29,7 +12,6 @@ import (
 	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
 )
 
-//checkKind is a method to execute Dgraph query to check the kind of the object
 func checkKind(ctx context.Context, txn *dgo.Txn, uid, _type string) bool { //nolint
 	q := `query object($_uid: string) {
                 object(func: uid($_uid)) @filter(eq(type, $type)) {
@@ -57,32 +39,31 @@ func checkKind(ctx context.Context, txn *dgo.Txn, uid, _type string) bool { //no
 	return len(result.Object) > 0
 }
 
-//DeleteObject is a method to execute Dgraph query to delete objects
 func (s *DGraphRepo) DeleteObject(ctx context.Context, uid string) (err error) {
 	txn := s.Dg.NewTxn()
 
 	// Find target node
 	const q = `
 	query deleteObject($root: string){
-		object(func: uid($root)) @filter(has(name)) {
-		  uid
-		  name
-		  children {
-			uid
-		  }
-		  ~children { # Parent
-			uid
-			name
-		  }
-			  ~owns {
-				uid
-			  }
-			  ~access.to {
-				uid
-				name
-			  }
-		}
+	  object(func: uid($root)) {
+	    uid
+	    name
+	    children {
+	      uid
+	    }
+	    ~children { # Parent
+	      uid
+	      name
+	    }
+            ~owns {
+              uid
+            }
+            ~access.to {
+              uid
+              name
+            }
 	  }
+	}
 	`
 
 	resp, err := txn.QueryWithVars(ctx, q, map[string]string{
@@ -104,7 +85,7 @@ func (s *DGraphRepo) DeleteObject(ctx context.Context, uid string) (err error) {
 	mu := &api.Mutation{}
 
 	if len(result.Objects) == 0 {
-		return errors.New("The Object is not found")
+		return errors.New("unexpected response from DB: 0 objects founds")
 	}
 
 	// Detect parent by ~contains edge
@@ -200,11 +181,14 @@ func addDeletesRecursively(mu *api.Mutation, items []*Object) {
 	}
 }
 
-//CreateObject is a method to execute Dgraph query to create objects
 func (s *DGraphRepo) CreateObject(ctx context.Context, name, parentID, kind, namespaceID string) (id string, err error) {
 	txn := s.Dg.NewTxn()
 
-	namespace, err := s.GetNamespaceID(ctx, namespaceID)
+	// if ok := checkType(ctx, txn, namespaceID, "namespace"); !ok {
+	// 	return "", errors.New("Invalid namespace")
+	// }
+
+	namespace, err := s.GetNamespace(ctx, namespaceID)
 	if err != nil {
 		return "", errors.New("Invalid namespace")
 	}
@@ -273,13 +257,13 @@ func (s *DGraphRepo) CreateObject(ctx context.Context, name, parentID, kind, nam
 	return a.GetUids()["new"], nil
 }
 
-//ListForAccount is a method to execute Dgraph query to list all the objects for an account
-func (s *DGraphRepo) ListForAccount(ctx context.Context, account string, namespaceid string, recurse bool) (inheritedObjects []*nodepb.Object, err error) {
+func (s *DGraphRepo) ListForAccount(ctx context.Context, account string, namespace string, recurse bool) (inheritedObjects []*nodepb.Object, err error) {
 	txn := s.Dg.NewReadOnlyTxn()
 
 	// TODO recurse?
 
-	//Decide the depth of recurssion for the object heirarchy
+	fmt.Println("LIST FOR ACCOUNT")
+
 	var depth int
 	if recurse {
 		depth = 10
@@ -287,8 +271,7 @@ func (s *DGraphRepo) ListForAccount(ctx context.Context, account string, namespa
 		depth = 1
 	}
 
-	//Dgrph Query to get the object heirachy from the namespace
-	var q = `query list($account: string, $namespaceid: string) {
+	var q = `query list($account: string, $namespace: string) {
                    var(func: uid($account)) @cascade {
                      access.to.namespace %v {
                        owns {
@@ -315,8 +298,8 @@ func (s *DGraphRepo) ListForAccount(ctx context.Context, account string, namespa
                    }
                   }`
 
-	if namespaceid != "" {
-		q = fmt.Sprintf(q, "@filter(uid($namespaceid) and eq(type,namespace))", depth)
+	if namespace != "" {
+		q = fmt.Sprintf(q, "@filter(eq(name,$namespace))", depth)
 	} else {
 		q = fmt.Sprintf(q, "", depth)
 	}
@@ -329,8 +312,8 @@ func (s *DGraphRepo) ListForAccount(ctx context.Context, account string, namespa
 	}
 
 	params := map[string]string{
-		"$account":     account,
-		"$namespaceid": namespaceid,
+		"$account":   account,
+		"$namespace": namespace,
 	}
 
 	res, err := txn.QueryWithVars(ctx, q, params)
@@ -345,7 +328,7 @@ func (s *DGraphRepo) ListForAccount(ctx context.Context, account string, namespa
 
 	var roots []Object
 
-	//Give access to the newly created objects
+	// Access grants
 	for _, accessObject := range result.Inherited {
 
 		var isRoot = true
@@ -359,6 +342,7 @@ func (s *DGraphRepo) ListForAccount(ctx context.Context, account string, namespa
 		}
 
 		if isRoot {
+			fmt.Println(accessObject.Name, " is root")
 			roots = append(roots, accessObject)
 		}
 

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-infinimesh-root-account
+type: Opaque
+data:
+  username: cm9vdA==
+  password: d3FMN2dGdTRBQnl4eURtcUwycjYwazRDc25mNk9lZFNyYjcwUXVIWk80QT0=
