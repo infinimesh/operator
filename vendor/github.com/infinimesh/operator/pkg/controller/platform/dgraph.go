@@ -5,11 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-<<<<<<< HEAD
-	grpc "google.golang.org/grpc"
-=======
 	"google.golang.org/grpc"
->>>>>>> parent of 9a86701 (Merge branch 'update-infinimesh-in-vendors' into infinidev)
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
