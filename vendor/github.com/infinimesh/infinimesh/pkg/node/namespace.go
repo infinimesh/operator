@@ -117,7 +117,7 @@ func (n *NamespaceController) ListNamespaces(ctx context.Context, request *nodep
 
 	log := n.Log.Named("List Namespaces Controller")
 	//Added logging
-	log.Debug("Function Invoked")
+	log.Info("Function Invoked")
 
 	//Get metadata and from context and perform validation
 	_, requestorID, err := Validation(ctx, log)
@@ -163,7 +163,7 @@ func (n *NamespaceController) ListNamespaces(ctx context.Context, request *nodep
 	}
 
 	//Added logging
-	log.Debug("List Namespaces successful")
+	log.Info("List Namespaces successful")
 	return &nodepb.ListNamespacesResponse{
 		Namespaces: namespaces,
 	}, nil
@@ -175,7 +175,7 @@ func (n *NamespaceController) GetNamespace(ctx context.Context, request *nodepb.
 	log := n.Log.Named("Get Namespace using name Controller")
 
 	//Added logging
-	log.Debug("Function Invoked", zap.String("Namespace", request.Namespace))
+	log.Info("Function Invoked", zap.String("Namespace", request.Namespace))
 
 	//Get metadata and from context and perform validation
 	_, requestorID, err := Validation(ctx, log)
@@ -223,7 +223,7 @@ func (n *NamespaceController) GetNamespaceID(ctx context.Context, request *nodep
 	log := n.Log.Named("Get Namespace using ID Controller")
 
 	//Added logging
-	log.Debug("Function Invoked", zap.String("Namespace", request.Namespace))
+	log.Info("Function Invoked", zap.String("Namespace", request.Namespace))
 
 	namespace, err := n.Repo.GetNamespaceID(ctx, request.GetNamespace())
 	if err != nil {
@@ -232,7 +232,7 @@ func (n *NamespaceController) GetNamespaceID(ctx context.Context, request *nodep
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	//Added logging
-	log.Debug("Get Namespace using ID successful")
+	log.Info("Get Namespace using ID successful")
 	return namespace, nil
 }
 
@@ -241,7 +241,7 @@ func (n *NamespaceController) ListPermissions(ctx context.Context, request *node
 
 	log := n.Log.Named("List Permissions Controller")
 	//Added logging
-	log.Debug("Function Invoked", zap.String("Namespace", request.Namespace))
+	log.Info("Function Invoked", zap.String("Namespace", request.Namespace))
 
 	permissions, err := n.Repo.ListPermissionsInNamespace(ctx, request.Namespace)
 	if err != nil {
@@ -251,7 +251,7 @@ func (n *NamespaceController) ListPermissions(ctx context.Context, request *node
 	}
 
 	//Added logging
-	log.Debug("List Permissions successful")
+	log.Info("List Permissions successful")
 	return &nodepb.ListPermissionsResponse{Permissions: permissions}, nil
 }
 
@@ -318,7 +318,7 @@ func (n *NamespaceController) DeleteNamespace(ctx context.Context, request *node
 	}
 
 	//Validate that namespace is not root
-	if namespace.Name == "root" && !request.Harddelete {
+	if namespace.Name == "root" {
 		//Added logging
 		log.Error("Cannot delete root Namespace")
 		return nil, status.Error(codes.FailedPrecondition, "Cannot delete root Namespace")
@@ -340,53 +340,24 @@ func (n *NamespaceController) DeleteNamespace(ctx context.Context, request *node
 	if resp.GetDecision().GetValue() && (isroot.GetIsRoot() || isadmin.GetIsAdmin()) {
 		//Action to perform when delete is issued instead of revoke
 		if request.Harddelete {
+			//Set the datecondition to 14days back date
+			//This is to ensure that records that are older then 14 days or more will be only be deleted.
+			datecondition := time.Now().AddDate(0, 0, -14).Format(time.RFC3339)
 
-			response, err := n.Repo.GetRetentionPeriods(ctx)
+			//Added logging
+			log.Info("Hard Delete Process Invoked")
+			//Invokde Hardelete function with the date conidtion
+			err = n.Repo.HardDeleteNamespace(ctx, datecondition)
 			if err != nil {
-				//Added logging
-				log.Error("Unable to get Retention Period for Hard Delete process", zap.Error(err))
-				return nil, status.Error(codes.Internal, err.Error())
-			}
-
-			if !(len(response) > 0) {
-				//Added logging
-				log.Error("No Retention Period obtained for hard Delete", zap.Error(err))
-				return nil, status.Error(codes.Internal, err.Error())
-			}
-
-			//Remove Duplicate values from the response
-			resMap := map[int]bool{}
-			rententionPeriod := []int{}
-			for v := range response {
-				if resMap[response[v]] == true {
+				if status.Code(err) != 5 { //5 is the error code for NotFound in GRPC
+					//Added logging
+					log.Error("Failed to complete Hard delete Namespace process", zap.Error(err))
+					return nil, status.Error(codes.Internal, err.Error())
 				} else {
-					resMap[response[v]] = true
-					rententionPeriod = append(rententionPeriod, response[v])
+					log.Error("Failed to complete Hard delete Namespace process", zap.Error(err))
+					return nil, status.Error(codes.Internal, err.Error())
 				}
 			}
-
-			for _, rp := range rententionPeriod {
-
-				//Set the datecondition as per the retnetion period for each namespace
-				//This is to ensure that records that are older then rentention period or more will be only be deleted.
-				datecondition := time.Now().AddDate(0, 0, -rp).Format(time.RFC3339)
-
-				//Added logging
-				log.Info("Hard Delete Process Invoked")
-				//Invokde Hardelete function with the date conidtion
-				err = n.Repo.HardDeleteNamespace(ctx, datecondition)
-				if err != nil {
-					if status.Code(err) != 5 { //5 is the error code for NotFound in GRPC
-						//Added logging
-						log.Error("Failed to complete Hard delete Namespace process", zap.Error(err))
-						return nil, status.Error(codes.Internal, err.Error())
-					} else {
-						log.Error("Failed to complete Hard delete Namespace process", zap.Error(err))
-						return nil, status.Error(codes.Internal, err.Error())
-					}
-				}
-			}
-
 			//Added logging
 			log.Info("Hard Delete Process Successful")
 		} else {

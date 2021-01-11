@@ -149,7 +149,7 @@ func (s *ObjectController) ListObjects(ctx context.Context, request *nodepb.List
 
 	log := s.Log.Named("List Objects Controller")
 	//Added logging
-	log.Debug("Function Invoked",
+	log.Info("Function Invoked",
 		zap.String("Account", request.Account),
 		zap.String("Namespace", request.Namespace),
 		zap.Bool("Recurse", request.Recurse))
@@ -173,7 +173,7 @@ func (s *ObjectController) ListObjects(ctx context.Context, request *nodepb.List
 	}
 
 	//Added logging
-	log.Debug("List Objects successful")
+	log.Info("List Objects successful")
 	return &nodepb.ListObjectsResponse{
 		Objects: objects,
 	}, nil

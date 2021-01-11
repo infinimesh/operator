@@ -29,7 +29,6 @@ type Namespace struct {
 	Name                 string `json:"name,omitempty"`
 	MarkForDeletion      bool   `json:"markfordeletion,omitempty"`
 	DeleteInitiationTime string `json:"deleteinitiationtime,omitempty"`
-	RetentionPeriod      int32  `json:"retentionperiod,omitempty"`
 
 	Owns []*Object `json:"owns,omitempty"`
 
