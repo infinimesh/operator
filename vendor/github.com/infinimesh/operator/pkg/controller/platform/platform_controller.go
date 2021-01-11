@@ -178,10 +178,6 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
-	if err := r.reconcileDeviceDetails(request, instance); err != nil {
-		return reconcile.Result{}, err
-	}
-
 	if err := r.reconcileTimeseries(request, instance); err != nil {
 		return reconcile.Result{}, err
 	}

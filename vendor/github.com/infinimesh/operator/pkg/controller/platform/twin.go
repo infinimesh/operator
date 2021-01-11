@@ -138,7 +138,6 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 				found.Spec = deploy.Spec
 				log.Info("Updating Deployment", "namespace", deploy.Namespace, "name", deploy.Name)
 				err = r.Update(context.TODO(), found)
-
 				if err != nil {
 					return err
 				}
