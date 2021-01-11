@@ -37,7 +37,7 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 					Containers: []corev1.Container{
 						{
 							Name:            "mqtt-bridge",
-							Image:           "quay.io/infinimesh/mqtt-bridge:infinidev",
+							Image:           "quay.io/infinimesh/mqtt-bridge:latest",
 							ImagePullPolicy: corev1.PullAlways,
 							VolumeMounts: []corev1.VolumeMount{
 								{
@@ -53,10 +53,6 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 								{
 									Name:  "DEVICE_REGISTRY_URL",
 									Value: request.Name + "-device-registry:8080",
-								},
-								{
-									Name:  "DB_ADDR2",
-									Value: instance.Name + "-redis-device-details:6379",
 								},
 							},
 						},

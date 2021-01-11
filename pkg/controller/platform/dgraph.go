@@ -66,7 +66,7 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 	}
 
 	if err != nil {
-		accid, err := repo.CreateUserAccount(context.TODO(), "root", pw, true, true)
+		accid, err := repo.CreateUserAccount(context.TODO(), "root", pw, true, true, true)
 		if err != nil {
 			log.Error(err, "Failed to create root account")
 			return err
