@@ -29,6 +29,7 @@ func (r *ReconcilePlatform) reconcileHardDeleteNamespace(request reconcile.Reque
 				Spec: batchv1.JobSpec{
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
+							RestartPolicy: corev1.RestartPolicyOnFailure,
 							Containers: []corev1.Container{
 								{
 									Name:            "hello",
