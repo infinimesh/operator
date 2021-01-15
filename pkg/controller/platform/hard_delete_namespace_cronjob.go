@@ -62,5 +62,5 @@ func (r *ReconcilePlatform) reconcileHardDeleteNamespace(request reconcile.Reque
 		return err
 	}
 	return nil
-
+	//Dummy commit
 }
