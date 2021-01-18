@@ -19,11 +19,11 @@ func (r *ReconcilePlatform) reconcileHardDeleteNamespace(request reconcile.Reque
 	log := logger.WithName("HardDeleteNamespace")
 	cronjob := &v1beta1.CronJob{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "demo-cronjob",
+			Name:      "harddeletenamespace",
 			Namespace: "default",
 		},
 		Spec: v1beta1.CronJobSpec{
-			Schedule:          "*/1 * * * *",
+			Schedule:          "0/1 0 * * *",
 			ConcurrencyPolicy: v1beta1.ForbidConcurrent,
 			JobTemplate: v1beta1.JobTemplateSpec{
 				Spec: batchv1.JobSpec{
@@ -32,11 +32,27 @@ func (r *ReconcilePlatform) reconcileHardDeleteNamespace(request reconcile.Reque
 							RestartPolicy: corev1.RestartPolicyOnFailure,
 							Containers: []corev1.Container{
 								{
-									Name:            "hello",
-									Image:           "busybox",
+									Name:            "harddelete",
+									Image:           "curlimages/curl",
 									ImagePullPolicy: corev1.PullAlways,
+									EnvFrom: []corev1.EnvFromSource{
+										{
+											SecretRef: &corev1.SecretEnvSource{
+												LocalObjectReference: corev1.LocalObjectReference{
+													Name: instance.Name + "-root-account",
+												},
+											},
+										},
+									},
 									Command: []string{
-										"/bin/sh", "-c", "date; echo Hello from the Kubernetes cluster",
+										"/bin/sh", "-c", "echo START;",
+										"echo START;", "printenv;",
+										"echo $MY_INFINIMESH_APISERVER_REST_SERVICE_HOST;",
+										"temptoken=`(curl --location --request POST 'https://'\"$MY_INFINIMESH_APISERVER_REST_SERVICE_HOST\"'/account/token' --header 'Content-Type:application/json' --data-raw '{\"password\":\"'\"$password\"'\",\"username\":\"'\"$username\"'\"}' | sed -n '/ *\"token\":*\"/ { s///; s/\".*//; p; }')`;",
+										"token=`echo \"${temptoken:1}\"`;",
+										"echo $token;",
+										"curl -X DELETE https://api.infinimesh.dev/namespaces/0xeab0/true -H 'Authorization:bearer '\"$token\"'';",
+										"echo END;",
 									},
 								},
 							},
