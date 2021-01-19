@@ -69,7 +69,7 @@ func (r *ReconcilePlatform) reconcileHardDeleteNamespace(request reconcile.Reque
 	foundS := &v1beta1.CronJob{}
 	err := r.Get(context.TODO(), types.NamespacedName{Name: cronjob.Name, Namespace: cronjob.Namespace}, foundS)
 	if err != nil && errors.IsNotFound(err) {
-		log.Info("Creating demo cronjob", "namespace", cronjob.Namespace, "name", cronjob.Name)
+		log.Info("Creating cronjob for hard delete namespace", "namespace", cronjob.Namespace, "name", cronjob.Name)
 		err = r.Create(context.TODO(), cronjob)
 		if err != nil {
 			return err
