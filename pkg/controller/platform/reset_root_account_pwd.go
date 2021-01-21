@@ -28,8 +28,8 @@ func (r *ReconcilePlatform) reconcileResetRootAccountPwd(request reconcile.Reque
 			Name:      "reset-pwd",
 			Namespace: "default",
 		},
-		Rules: []v1beta1rbac.Rules{
-			v1beta1rbac.Rules{
+		Rules: []v1beta1rbac.PolicyRule{
+			v1beta1rbac.PolicyRule{
 				APIGroups: []string{""},
 				Resources: []string{"secrets"},
 				Verbs:     []string{"delete", "get"},
