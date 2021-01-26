@@ -20,8 +20,6 @@ import (
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/go-logr/logr"
 
-	"strings"
-
 	"github.com/infinimesh/infinimesh/pkg/node"
 	"github.com/infinimesh/infinimesh/pkg/node/dgraph"
 	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
@@ -99,57 +97,84 @@ func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance
 	}
 
 	pw := base64.StdEncoding.EncodeToString([]byte(randomKey))
-
-	foundAdminSecret := &corev1.Secret{}
-	err = r.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-root-account", Namespace: instance.Namespace}, foundAdminSecret)
-	if err != nil && errors.IsNotFound(err) {
-		log.Info("Creating admin secret", "namespace", instance.Namespace, "name", instance.Name+"-root-account")
-
-		secretAdmin := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      instance.Name + "-root-account",
-				Namespace: instance.Namespace,
-			},
-			StringData: map[string]string{
-				"username": "root",
-				"password": pw,
-			},
-		}
-
-		log.Info("gRPC dial OK")
-		nodeserverClient := nodepb.NewAccountServiceClient(nodeserverConn)
-
-		err = setPassword(instance, "root", pw, nodeserverClient, log.WithName("setPassword"), repo)
-		if err != nil {
-			return err
-		}
-
-		if err := controllerutil.SetControllerReference(instance, secretAdmin, r.scheme); err != nil {
-			return err
-		}
-
-		err = r.Create(context.TODO(), secretAdmin)
-		if err != nil {
-			return err
-		}
-	} else if err != nil {
-		return err
-	} else {
-		// Exists, sync password in secret to password in dgraph
-
-		secretB64, ok := foundAdminSecret.Data["password"]
-		if !ok {
-			log.Info("No password field present in secret, ignoring")
-			return nil
-		}
-
-		secretStr := strings.Trim(string(secretB64), "\n")
-
-		err = setPassword(instance, "root", secretStr, nodeserverClient, log.WithName("setPassword"), repo)
-		if err != nil {
-			return err
-		}
+	/////
+	secretAdmin := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      instance.Name + "-root-account",
+			Namespace: instance.Namespace,
+		},
+		StringData: map[string]string{
+			"username": "root",
+			"password": pw,
+		},
 	}
+
+	log.Info("gRPC dial OK")
+
+	err = setPassword(instance, "root", pw, nodeserverClient, log.WithName("setPassword"), repo)
+	if err != nil {
+		return err
+	}
+
+	if err := controllerutil.SetControllerReference(instance, secretAdmin, r.scheme); err != nil {
+		return err
+	}
+
+	err = r.Create(context.TODO(), secretAdmin)
+	if err != nil {
+		return err
+	}
+	///
+	//foundAdminSecret := &corev1.Secret{}
+	//err = r.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-root-account", Namespace: instance.Namespace}, foundAdminSecret)
+	// if err != nil && errors.IsNotFound(err) {
+	// 	log.Info("Creating admin secret", "namespace", instance.Namespace, "name", instance.Name+"-root-account")
+
+	// 	secretAdmin := &corev1.Secret{
+	// 		ObjectMeta: metav1.ObjectMeta{
+	// 			Name:      instance.Name + "-root-account",
+	// 			Namespace: instance.Namespace,
+	// 		},
+	// 		StringData: map[string]string{
+	// 			"username": "root",
+	// 			"password": pw,
+	// 		},
+	// 	}
+
+	// 	log.Info("gRPC dial OK")
+	// 	nodeserverClient := nodepb.NewAccountServiceClient(nodeserverConn)
+
+	// 	err = setPassword(instance, "root", pw, nodeserverClient, log.WithName("setPassword"), repo)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+
+	// 	if err := controllerutil.SetControllerReference(instance, secretAdmin, r.scheme); err != nil {
+	// 		return err
+	// 	}
+
+	// 	err = r.Create(context.TODO(), secretAdmin)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// } else if err != nil {
+	// 	return err
+	// } else {
+	// 	// Exists, sync password in secret to password in dgraph
+
+	// 	secretB64, ok := foundAdminSecret.Data["password"]
+	// 	if !ok {
+	// 		log.Info("No password field present in secret, ignoring")
+	// 		return nil
+	// 	}
+
+	// 	secretStr := strings.Trim(string(secretB64), "\n")
+
+	// 	err = setPassword(instance, "root", secretStr, nodeserverClient, log.WithName("setPassword"), repo)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 	return nil
 }
 
