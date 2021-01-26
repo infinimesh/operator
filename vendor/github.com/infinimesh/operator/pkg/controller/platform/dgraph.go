@@ -83,7 +83,7 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 
 func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance *infinimeshv1beta1.Platform, repo node.Repo) error {
 	log := logger.WithName("rootpw")
-	hostNodeserver := instance.Name + "-nodeserver." + instance.Namespace + ".svc.cluster.local:9080"
+	hostNodeserver := instance.Name + "-nodeserver." + instance.Namespace + ".svc.cluster.local:8080"
 	nodeserverConn, err := grpc.Dial(hostNodeserver, grpc.WithInsecure())
 	if err != nil {
 		return err
