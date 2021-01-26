@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
@@ -20,8 +21,6 @@ import (
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/go-logr/logr"
 
-	"strings"
-
 	"github.com/infinimesh/infinimesh/pkg/node"
 	"github.com/infinimesh/infinimesh/pkg/node/dgraph"
 	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
@@ -35,7 +34,7 @@ const (
 func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, nodeserverClient nodepb.AccountServiceClient, log logr.Logger, repo node.Repo) error {
 	// Try to login
 
-	rootAccount, err := repo.GetAccount(context.TODO(), "0x2")
+	rootAccount, err := repo.GetAccount(context.TODO(), "0x3")
 	if err != nil {
 		log.Error(err, "Failed to get Account")
 	} else {
@@ -99,34 +98,7 @@ func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance
 	}
 
 	pw := base64.StdEncoding.EncodeToString([]byte(randomKey))
-	/////
-	secretAdmin := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      instance.Name + "-root-account",
-			Namespace: instance.Namespace,
-		},
-		StringData: map[string]string{
-			"username": "root",
-			"password": pw,
-		},
-	}
 
-	log.Info("gRPC dial OK")
-
-	err = setPassword(instance, "root", pw, nodeserverClient, log.WithName("setPassword"), repo)
-	if err != nil {
-		return err
-	}
-
-	if err := controllerutil.SetControllerReference(instance, secretAdmin, r.scheme); err != nil {
-		return err
-	}
-
-	err = r.Create(context.TODO(), secretAdmin)
-	if err != nil {
-		return err
-	}
-	///
 	foundAdminSecret := &corev1.Secret{}
 	err = r.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-root-account", Namespace: instance.Namespace}, foundAdminSecret)
 	if err != nil && errors.IsNotFound(err) {
