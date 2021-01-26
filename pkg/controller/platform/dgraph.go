@@ -99,7 +99,34 @@ func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance
 	}
 
 	pw := base64.StdEncoding.EncodeToString([]byte(randomKey))
+	/////
+	secretAdmin := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      instance.Name + "-root-account",
+			Namespace: instance.Namespace,
+		},
+		StringData: map[string]string{
+			"username": "root",
+			"password": pw,
+		},
+	}
 
+	log.Info("gRPC dial OK")
+
+	err = setPassword(instance, "root", pw, nodeserverClient, log.WithName("setPassword"), repo)
+	if err != nil {
+		return err
+	}
+
+	if err := controllerutil.SetControllerReference(instance, secretAdmin, r.scheme); err != nil {
+		return err
+	}
+
+	err = r.Create(context.TODO(), secretAdmin)
+	if err != nil {
+		return err
+	}
+	///
 	foundAdminSecret := &corev1.Secret{}
 	err = r.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-root-account", Namespace: instance.Namespace}, foundAdminSecret)
 	if err != nil && errors.IsNotFound(err) {
