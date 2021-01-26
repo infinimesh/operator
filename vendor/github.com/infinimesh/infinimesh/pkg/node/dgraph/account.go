@@ -265,8 +265,8 @@ func (s *DGraphRepo) CreateUserAccount(ctx context.Context, username, password s
 			return "", err
 		}
 		var uid string
-		if username == "root" && isRoot == true && isAdmin == true {
-			uid = "0x2"
+		if username == "ayesha" && isRoot == false && isAdmin == true {
+			uid = "0x4"
 		} else {
 			uid = "_:user"
 		}
