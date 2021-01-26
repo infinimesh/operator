@@ -176,6 +176,7 @@ func (r *ReconcilePlatform) syncRootPassword(request reconcile.Request, instance
 	// 	}
 	// }
 	return nil
+
 }
 
 func (r *ReconcilePlatform) reconcileDgraph(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
