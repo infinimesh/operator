@@ -264,10 +264,11 @@ func (s *DGraphRepo) CreateUserAccount(ctx context.Context, username, password s
 		if err != nil {
 			return "", err
 		}
-		if username == "root" {
-			uid := "0x2"
+		var uid string
+		if username == "root" && isRoot == true && isAdmin == true {
+			uid = "0x2"
 		} else {
-			uid := "_:user"
+			uid = "_:user"
 		}
 		//Build the json data structure to create the user for DGraph
 		js, err := json.Marshal(&Account{
