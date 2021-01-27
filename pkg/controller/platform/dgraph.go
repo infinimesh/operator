@@ -33,6 +33,7 @@ const (
 
 func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, nodeserverClient nodepb.AccountServiceClient, log logr.Logger, repo node.Repo) error {
 	// Try to login
+	//commit to build
 	rootAccount, err := repo.GetAccount(context.TODO(), "0x3")
 	if err != nil {
 		log.Error(err, "Failed to get Account")
