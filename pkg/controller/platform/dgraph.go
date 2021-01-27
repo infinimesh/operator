@@ -42,7 +42,6 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 			Username: rootAccount.Name,
 			Password: pw,
 		})
-
 		if err != nil {
 			log.Info("Failed to Authenticate with root. Try to update the password for root", "error", err)
 		} else {
