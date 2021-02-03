@@ -62,7 +62,7 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 	} else if err != nil {
 		return err
 	}
-	storageClassName := "infinimesh-standard"
+	storageClassName := "ibmc-vpc-block-retain-general-purpose"
 
 	var pvcSpec corev1.PersistentVolumeClaimSpec
 
