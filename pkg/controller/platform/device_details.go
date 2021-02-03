@@ -73,7 +73,6 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 			Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("1Gi")},
 		},
 	}
-
 	statefulSetDeviceDetails := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name + "-redis-device-details",
