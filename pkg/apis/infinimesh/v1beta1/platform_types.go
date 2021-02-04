@@ -28,10 +28,11 @@ import (
 // PlatformSpec defines the desired state of Platform
 type PlatformSpec struct {
 	MQTT      PlatformMQTTBroker `json:"mqtt,omitempty" protobuf:"bytes,1,name=mqtt"`
-	DGraph    PlatformDgraph     `json:"dgraph,omitempty" protobuf:"bytes2,name=dgraph"`
+	DGraph    PlatformDgraph     `json:"dgraph,omitempty" protobuf:"bytes,2,name=dgraph"`
 	Kafka     PlatformKafka      `json:"kafka,omitempty" protobuf:"bytes,2,name=kafka"`
 	Apiserver PlatformApiserver  `json:"apiserver,omitempty" protobuf:"bytes,3,name=apiserver"`
 	App       PlatformApp        `json:"app,omitempty" protobuf:"bytes,4,name=app"`
+	Storage   PlatformStorage    `json:"storage,omitempty" protobuf:"bytes,1,name=storage"`
 
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -74,6 +75,9 @@ type PlatformKafka struct {
 
 type PlatformMQTTBroker struct {
 	SecretName string `json:"secretName,omitempty" protobuf:"bytes,1,name=secretName"`
+}
+type PlatformStorage struct {
+	StorageClassName string `json:"storageClassName,omitempty" protobuf:"bytes,1,name=storageClassName"`
 }
 
 // PlatformStatus defines the observed state of Platform

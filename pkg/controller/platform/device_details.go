@@ -69,6 +69,7 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 	pvcSpec = corev1.PersistentVolumeClaimSpec{
 		AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 		//StorageClassName: &storageClassName,
+		StorageClassName: &instance.Spec.Storage.StorageClassName,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("1Gi")},
 		},

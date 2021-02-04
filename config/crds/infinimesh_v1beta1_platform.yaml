@@ -68,6 +68,11 @@ spec:
                 secretName:
                   type: string
               type: object
+            storage:
+              properties:
+                storageClassName:
+                  type: string
+              type: object
           type: object
         status:
           type: object

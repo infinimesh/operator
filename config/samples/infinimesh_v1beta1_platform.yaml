@@ -22,3 +22,5 @@ spec:
         - hosts:
           - "grpc.api.infinimesh.io"
           secretName: "api-infinimesh-io-tls"
+  storage:
+    storageClassName: "infinimesh-standard"
