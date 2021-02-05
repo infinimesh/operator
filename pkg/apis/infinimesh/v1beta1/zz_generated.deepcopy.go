@@ -131,7 +131,7 @@ func (in *PlatformDgraphAlpha) DeepCopy() *PlatformDgraphAlpha {
 	if in == nil {
 		return nil
 	}
-	out := new(PlatformDgraph)
+	out := new(PlatformDgraphAlpha)
 	in.DeepCopyInto(out)
 	return out
 }
@@ -152,7 +152,7 @@ func (in *PlatformDgraphZero) DeepCopy() *PlatformDgraphZero {
 	if in == nil {
 		return nil
 	}
-	out := new(PlatformDgraph)
+	out := new(PlatformDgraphZero)
 	in.DeepCopyInto(out)
 	return out
 }
