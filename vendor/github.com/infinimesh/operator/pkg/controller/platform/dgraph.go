@@ -197,7 +197,7 @@ func (r *ReconcilePlatform) reconcileDgraph(request reconcile.Request, instance 
 	}
 
 	var pvcSpec corev1.PersistentVolumeClaimSpec
-	if instance.Spec.DGraph.Storage == nil {
+	if instance.Spec.DGraphZero.Storage == nil {
 		pvcSpec = corev1.PersistentVolumeClaimSpec{
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 			Resources: corev1.ResourceRequirements{
@@ -205,7 +205,7 @@ func (r *ReconcilePlatform) reconcileDgraph(request reconcile.Request, instance 
 			},
 		}
 	} else {
-		pvcSpec = *instance.Spec.DGraph.Storage
+		pvcSpec = *instance.Spec.DGraphZero.Storage
 
 	}
 
@@ -385,7 +385,18 @@ fi
 	} else if err != nil {
 		return err
 	}
+	var pvcSpecAlpha corev1.PersistentVolumeClaimSpec
+	if instance.Spec.DGraphAlpha.Storage == nil {
+		pvcSpecAlpha = corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse(defaultStorage)},
+			},
+		}
+	} else {
+		pvcSpecAlpha = *instance.Spec.DGraphAlpha.Storage
 
+	}
 	// Alpha Statefulset
 	statefulSetAlpha := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -491,7 +502,7 @@ dgraph alpha --my=$(hostname -f):7080 --lru_mb 2048 --zero ` + instance.Name + `
 							"volume.alpha.kubernetes.io/storage-class": "anything",
 						},
 					},
-					Spec: pvcSpec,
+					Spec: pvcSpecAlpha,
 				},
 			},
 		},

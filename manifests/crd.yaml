@@ -73,7 +73,12 @@ spec:
                 storage:
                   type: object
               type: object
-            dgraph:
+            dgraphAlpha:
+              properties:
+                storage:
+                  type: object
+              type: object
+            dgraphZero:
               properties:
                 storage:
                   type: object

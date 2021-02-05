@@ -29,6 +29,8 @@ import (
 type PlatformSpec struct {
 	MQTT                     PlatformMQTTBroker               `json:"mqtt,omitempty" protobuf:"bytes,1,name=mqtt"`
 	DGraph                   PlatformDgraph                   `json:"dgraph,omitempty" protobuf:"bytes,2,name=dgraph"`
+	DGraphAlpha              PlatformDgraphAlpha              `json:"dgraphAlpha,omitempty" protobuf:"bytes,2,name=dgraphAlpha"`
+	DGraphZero               PlatformDgraphZero               `json:"dgraphZero,omitempty" protobuf:"bytes,2,name=dgraphZero"`
 	Kafka                    PlatformKafka                    `json:"kafka,omitempty" protobuf:"bytes,2,name=kafka"`
 	Apiserver                PlatformApiserver                `json:"apiserver,omitempty" protobuf:"bytes,3,name=apiserver"`
 	App                      PlatformApp                      `json:"app,omitempty" protobuf:"bytes,4,name=app"`
@@ -40,6 +42,12 @@ type PlatformSpec struct {
 
 type PlatformDgraph struct {
 	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty" protobuf:"bytes,1,name=storage"`
+}
+type PlatformDgraphAlpha struct {
+	Storage *core.PersistentVolumeClaimSpec `json:"storageAlpha,omitempty" protobuf:"bytes,1,name=storageAlpha"`
+}
+type PlatformDgraphZero struct {
+	Storage *core.PersistentVolumeClaimSpec `json:"storageZero,omitempty" protobuf:"bytes,1,name=storageZero"`
 }
 type PlatformInfinimeshDefaultStorage struct {
 	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty" protobuf:"bytes,1,name=storage"`
