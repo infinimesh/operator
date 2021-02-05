@@ -24,3 +24,11 @@ spec:
           secretName: "api-infinimesh-io-tls"
   storage:
     storageClassName: "infinimesh-standard"
+  dgraph:
+    storage:
+      accessModes:
+        - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: "20Gi"
+      storageClassName: "infinimesh-standard"
