@@ -62,17 +62,21 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 	} else if err != nil {
 		return err
 	}
-	storageClassName := "ibmc-vpc-block-retain-general-purpose"
+	//storageClassName := "ibmc-vpc-block-retain-general-purpose"
+
 	var pvcSpec corev1.PersistentVolumeClaimSpec
-
-	pvcSpec = corev1.PersistentVolumeClaimSpec{
-		AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-		StorageClassName: &storageClassName,
-		Resources: corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("1Gi")},
-		},
+	if instance.Spec.InfinimeshDefaultStorage.Storage == nil {
+		pvcSpec = corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			//StorageClassName: &storageClassName,
+			//StorageClassName: &instance.Spec.InfinimeshDefaultStorage.StorageClassName,
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("1Gi")},
+			},
+		}
+	} else {
+		pvcSpec = *instance.Spec.InfinimeshDefaultStorage.Storage
 	}
-
 	statefulSetDeviceDetails := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name + "-redis-device-details",

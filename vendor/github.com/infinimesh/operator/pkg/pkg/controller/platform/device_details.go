@@ -62,21 +62,17 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 	} else if err != nil {
 		return err
 	}
-	//storageClassName := "ibmc-vpc-block-retain-general-purpose"
-
+	storageClassName := "ionos-enterprise-hdd"
 	var pvcSpec corev1.PersistentVolumeClaimSpec
-	if instance.Spec.InfinimeshDefaultStorage.Storage == nil {
-		pvcSpec = corev1.PersistentVolumeClaimSpec{
-			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-			//StorageClassName: &storageClassName,
-			//StorageClassName: &instance.Spec.InfinimeshDefaultStorage.StorageClassName,
-			Resources: corev1.ResourceRequirements{
-				Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("1Gi")},
-			},
-		}
-	} else {
-		pvcSpec = *instance.Spec.InfinimeshDefaultStorage.Storage
+
+	pvcSpec = corev1.PersistentVolumeClaimSpec{
+		AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		StorageClassName: &storageClassName,
+		Resources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("1Gi")},
+		},
 	}
+
 	statefulSetDeviceDetails := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name + "-redis-device-details",
@@ -138,16 +134,16 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 						},
 					},
 					TerminationGracePeriodSeconds: func() *int64 { val := int64(60); return &val }(),
-					Volumes: []corev1.Volume{
-						{
-							Name: "datadir",
-							VolumeSource: corev1.VolumeSource{
-								PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-									ClaimName: "datadir",
-								},
-							},
-						},
-					},
+					// Volumes: []corev1.Volume{
+					// 	{
+					// 		Name: "datadir",
+					// 		VolumeSource: corev1.VolumeSource{
+					// 			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					// 				ClaimName: "datadir",
+					// 			},
+					// 		},
+					// 	},
+					// },
 				},
 			},
 			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
@@ -157,9 +153,6 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "datadir",
-						Annotations: map[string]string{
-							"volume.alpha.kubernetes.io/storage-class": "anything",
-						},
 					},
 					Spec: pvcSpec,
 				},

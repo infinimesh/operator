@@ -68,15 +68,15 @@ spec:
                 secretName:
                   type: string
               type: object
-            storage:
+            infinimeshDefaultStorage:
               properties:
-                storageClassName:
-                  type: string
+                storage:
+                  type: object
               type: object
             dgraph:
               properties:
                 storage:
-                  type: string
+                  type: object
               type: object
           type: object
         status:

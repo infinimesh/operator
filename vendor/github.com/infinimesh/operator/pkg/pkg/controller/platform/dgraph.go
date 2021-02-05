@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"strings"
 
 	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
@@ -21,6 +20,8 @@ import (
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/go-logr/logr"
 
+	"strings"
+
 	"github.com/infinimesh/infinimesh/pkg/node"
 	"github.com/infinimesh/infinimesh/pkg/node/dgraph"
 	"github.com/infinimesh/infinimesh/pkg/node/nodepb"
@@ -33,6 +34,7 @@ const (
 
 func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, nodeserverClient nodepb.AccountServiceClient, log logr.Logger, repo node.Repo) error {
 	// Try to login
+
 	rootAccount, err := repo.GetAccount(context.TODO(), "0x2")
 	if err != nil {
 		log.Error(err, "Failed to get Account")
@@ -42,6 +44,7 @@ func setPassword(instance *infinimeshv1beta1.Platform, username, pw string, node
 			Username: rootAccount.Name,
 			Password: pw,
 		})
+
 		if err != nil {
 			log.Info("Failed to Authenticate with root. Try to update the password for root", "error", err)
 		} else {
@@ -206,7 +209,6 @@ func (r *ReconcilePlatform) reconcileDgraph(request reconcile.Request, instance 
 		}
 	} else {
 		pvcSpec = *instance.Spec.DGraph.Storage
-
 	}
 
 	statefulSetZero := &appsv1.StatefulSet{
