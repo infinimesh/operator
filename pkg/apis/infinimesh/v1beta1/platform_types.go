@@ -44,10 +44,10 @@ type PlatformDgraph struct {
 	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty" protobuf:"bytes,1,name=storage"`
 }
 type PlatformDgraphAlpha struct {
-	Storage *core.PersistentVolumeClaimSpec `json:"storageAlpha,omitempty" protobuf:"bytes,1,name=storageAlpha"`
+	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty" protobuf:"bytes,1,name=storage"`
 }
 type PlatformDgraphZero struct {
-	Storage *core.PersistentVolumeClaimSpec `json:"storageZero,omitempty" protobuf:"bytes,1,name=storageZero"`
+	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty" protobuf:"bytes,1,name=storage"`
 }
 type PlatformInfinimeshDefaultStorage struct {
 	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty" protobuf:"bytes,1,name=storage"`
