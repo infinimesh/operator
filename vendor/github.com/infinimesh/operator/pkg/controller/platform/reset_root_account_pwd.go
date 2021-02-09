@@ -71,13 +71,13 @@ func (r *ReconcilePlatform) reconcileResetRootAccountPwd(request reconcile.Reque
 			Namespace: "default",
 		},
 		Spec: v1beta1.CronJobSpec{
-			Schedule:          "*/1 * * * *",
+			Schedule:          "0/1 0 * * *",
 			ConcurrencyPolicy: v1beta1.ForbidConcurrent,
 			JobTemplate: v1beta1.JobTemplateSpec{
 				Spec: batchv1.JobSpec{
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
-							RestartPolicy:      corev1.RestartPolicyOnFailure,
+							RestartPolicy:      corev1.RestartPolicyNever,
 							ServiceAccountName: "reset-root-account-pwd",
 							Containers: []corev1.Container{
 								{

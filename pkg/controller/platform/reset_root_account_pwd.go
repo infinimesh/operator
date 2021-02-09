@@ -77,7 +77,7 @@ func (r *ReconcilePlatform) reconcileResetRootAccountPwd(request reconcile.Reque
 				Spec: batchv1.JobSpec{
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
-							RestartPolicy:      corev1.RestartPolicyOnFailure,
+							RestartPolicy:      corev1.RestartPolicyNever,
 							ServiceAccountName: "reset-root-account-pwd",
 							Containers: []corev1.Container{
 								{
