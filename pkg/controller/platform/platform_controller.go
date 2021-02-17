@@ -150,7 +150,7 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
-	if err := r.reconcileRegistry(request, instance); err != nil {
+	if err := r.reconcileDeviceDetails(request, instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -177,7 +177,7 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 	if err := r.reconcileFrontend(request, instance); err != nil {
 		return reconcile.Result{}, err
 	}
-	if err := r.reconcileDeviceDetails(request, instance); err != nil {
+	if err := r.reconcileRegistry(request, instance); err != nil {
 		return reconcile.Result{}, err
 	}
 	if err := r.reconcileResetRootAccountPwd(request, instance); err != nil {
