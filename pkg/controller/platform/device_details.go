@@ -18,7 +18,7 @@ import (
 
 func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	log := logger.WithName("Redis Device Details")
-	podName := podName
+	podName := instance.Name + "-redis-device-details"
 	log.Info("Ayesha", podName)
 
 	replicas := int32(1)
