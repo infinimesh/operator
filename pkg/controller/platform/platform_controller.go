@@ -141,56 +141,75 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-
-	if err := r.reconcileDgraph(request, instance); err != nil {
-		return reconcile.Result{}, err
+	if instance.Spec.Controller.Dgraph != false {
+		if err := r.reconcileDgraph(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
 	}
-
-	if err := r.reconcileMqtt(request, instance); err != nil {
-		return reconcile.Result{}, err
-	}
-	if instance.Spec.Controller.RedisDeviceDetails != false {
-		if err := r.reconcileDeviceDetails(request, instance); err != nil {
+	if instance.Spec.Controller.MQTTBridge != false {
+		if err := r.reconcileMqtt(request, instance); err != nil {
 			return reconcile.Result{}, err
 		}
 	}
 
-	if err := r.reconcileApiserver(request, instance); err != nil {
-		return reconcile.Result{}, err
+	if instance.Spec.Controller.DeviceDetails != false {
+		if err := r.reconcileDeviceDetails(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
 	}
+	if instance.Spec.Controller.APIServer != false {
+		if err := r.reconcileApiserver(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	if instance.Spec.Controller.APIServerRest != false {
+		if err := r.reconcileApiserverRest(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	if instance.Spec.Controller.NodeServer != false {
+		if err := r.reconcileNodeserver(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	if instance.Spec.Controller.TelemetryRouter != false {
+		if err := r.reconcileTelemetryRouter(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	if instance.Spec.Controller.Twin != false {
 
-	if err := r.reconcileApiserverRest(request, instance); err != nil {
-		return reconcile.Result{}, err
+		if err := r.reconcileTwin(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
 	}
+	if instance.Spec.Controller.Frontend != false {
 
-	if err := r.reconcileNodeserver(request, instance); err != nil {
-		return reconcile.Result{}, err
+		if err := r.reconcileFrontend(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
 	}
+	if instance.Spec.Controller.DeviceRegistry != false {
+		if err := r.reconcileRegistry(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	if instance.Spec.Controller.ResetRootAccountPwd != false {
+		if err := r.reconcileResetRootAccountPwd(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	if instance.Spec.Controller.HardDeleteNamespaceCronjob != false {
+		if err := r.reconcileHardDeleteNamespace(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	if instance.Spec.Controller.Timeseries != false {
 
-	if err := r.reconcileTelemetryRouter(request, instance); err != nil {
-		return reconcile.Result{}, err
+		if err := r.reconcileTimeseries(request, instance); err != nil {
+			return reconcile.Result{}, err
+		}
 	}
-
-	if err := r.reconcileTwin(request, instance); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if err := r.reconcileFrontend(request, instance); err != nil {
-		return reconcile.Result{}, err
-	}
-	if err := r.reconcileRegistry(request, instance); err != nil {
-		return reconcile.Result{}, err
-	}
-	if err := r.reconcileResetRootAccountPwd(request, instance); err != nil {
-		return reconcile.Result{}, err
-	}
-	if err := r.reconcileHardDeleteNamespace(request, instance); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// if err := r.reconcileTimeseries(request, instance); err != nil {
-	// 	return reconcile.Result{}, err
-	// }
 
 	return reconcile.Result{}, nil
 }

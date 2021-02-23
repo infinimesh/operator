@@ -80,7 +80,31 @@ spec:
               type: object
             controller:
               properties:
-                redisDeviceDetails:
+                device_details:
+                  type: bool
+                apiserver:
+                  type: bool
+                device_registry:
+                  type: bool
+                dgraph:
+                  type: bool
+                frontend:
+                  type: bool
+                hard_delete_namespace_cronjob:
+                  type: bool
+                timeseries:
+                  type: bool
+                mqtt_bridge:
+                  type: bool
+                nodeserver:
+                  type: bool
+                reset_root_account_pwd:
+                  type: bool
+                telemetry-router:
+                  type: bool
+                twin:
+                  type: bool
+                apiserver_rest:
                   type: bool
               type: object
           type: object

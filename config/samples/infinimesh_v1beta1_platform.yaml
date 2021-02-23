@@ -47,4 +47,15 @@ spec:
           storage: "10Gi"
       storageClassName: "infinimesh-standard"
   controller:
-    redisDeviceDetails: false
+    device_details: false
+    apiserver: false
+    device_registry: false
+    dgraph: false
+    frontend: true
+    hard_delete_namespace_cronjob: false
+    timeseries: false
+    mqtt_bridge: false
+    nodeserver: false
+    reset_root_account_pwd: false
+    telemetry-router: false
+    twin: false

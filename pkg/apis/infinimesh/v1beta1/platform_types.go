@@ -35,7 +35,7 @@ type PlatformSpec struct {
 	Apiserver                PlatformApiserver                `json:"apiserver,omitempty" protobuf:"bytes,3,name=apiserver"`
 	App                      PlatformApp                      `json:"app,omitempty" protobuf:"bytes,4,name=app"`
 	InfinimeshDefaultStorage PlatformInfinimeshDefaultStorage `json:"infinimeshDefaultStorage,omitempty" protobuf:"bytes,2,name=infinimeshDefaultStorage"`
-	Controller               PlatformController               `json:"controller,omitempty" protobuf:"bytes,1,name=controller"`
+	Controller               PlatformController               `json:"controller,omitempty" protobuf:"bytes,13,name=controller"`
 
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -54,7 +54,19 @@ type PlatformInfinimeshDefaultStorage struct {
 	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty" protobuf:"bytes,1,name=storage"`
 }
 type PlatformController struct {
-	RedisDeviceDetails bool `json:"redisDeviceDetails,omitempty" protobuf:"bytes,1,name=redisDeviceDetails"`
+	DeviceDetails              bool `json:"device_details,omitempty" protobuf:"bytes,1,name=device_details"`
+	APIServer                  bool `json:"apiserver,omitempty" protobuf:"bytes,1,name=apiserver"`
+	DeviceRegistry             bool `json:"device_registry,omitempty" protobuf:"bytes,1,name=device_registry"`
+	Dgraph                     bool `json:"dgraph,omitempty" protobuf:"bytes,1,name=dgraph"`
+	Frontend                   bool `json:"frontend,omitempty" protobuf:"bytes,1,name=frontend"`
+	HardDeleteNamespaceCronjob bool `json:"hard_delete_namespace_cronjob,omitempty" protobuf:"bytes,1,name=hard_delete_namespace_cronjob"`
+	Timeseries                 bool `json:"timeseries,omitempty" protobuf:"bytes,1,name=timeseries"`
+	MQTTBridge                 bool `json:"mqtt_bridge,omitempty" protobuf:"bytes,1,name=mqtt_bridge"`
+	NodeServer                 bool `json:"nodeserver,omitempty" protobuf:"bytes,1,name=nodeserver"`
+	ResetRootAccountPwd        bool `json:"reset_root_account_pwd,omitempty" protobuf:"bytes,1,name=reset_root_account_pwd"`
+	TelemetryRouter            bool `json:"telemetry-router,omitempty" protobuf:"bytes,1,name=telemetry-router"`
+	Twin                       bool `json:"twin,omitempty" protobuf:"bytes,1,name=twin"`
+	APIServerRest              bool `json:"apiserver_rest,omitempty" protobuf:"bytes,1,name=apiserver_rest"`
 }
 type PlatformTimeseries struct {
 	TimescaleDB *PlatformTimescaleDB `json:"timescaledb,omitempty" protobuf:"bytes,1,name=timescaledb"`
