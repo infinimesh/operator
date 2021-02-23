@@ -35,7 +35,6 @@ type PlatformSpec struct {
 	Apiserver                PlatformApiserver                `json:"apiserver,omitempty" protobuf:"bytes,3,name=apiserver"`
 	App                      PlatformApp                      `json:"app,omitempty" protobuf:"bytes,4,name=app"`
 	InfinimeshDefaultStorage PlatformInfinimeshDefaultStorage `json:"infinimeshDefaultStorage,omitempty" protobuf:"bytes,2,name=infinimeshDefaultStorage"`
-	Controller               PlatformController               `json:"controller,omitempty" protobuf:"bytes,1,name=controller"`
 
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -53,9 +52,7 @@ type PlatformDgraphZero struct {
 type PlatformInfinimeshDefaultStorage struct {
 	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty" protobuf:"bytes,1,name=storage"`
 }
-type PlatformController struct {
-	RedisDeviceDetails bool `json:"redisDeviceDetails,omitempty" protobuf:"bytes,1,name=redisDeviceDetails"`
-}
+
 type PlatformTimeseries struct {
 	TimescaleDB *PlatformTimescaleDB `json:"timescaledb,omitempty" protobuf:"bytes,1,name=timescaledb"`
 }

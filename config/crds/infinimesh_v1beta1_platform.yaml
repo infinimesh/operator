@@ -78,6 +78,11 @@ spec:
                 storage:
                   type: object
               type: object
+            controller:
+              properties:
+                redisDeviceDetails:
+                  type: bool
+              type: object
           type: object
         status:
           type: object

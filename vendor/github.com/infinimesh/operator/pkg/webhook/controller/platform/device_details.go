@@ -18,11 +18,50 @@ import (
 
 func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	log := logger.WithName("Redis Device Details")
-	podName := instance.Name + "-redis-device-details"
 
 	replicas := int32(1)
 
-	// ccreating pvc for redis device details
+	svc := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      instance.Name + "-redis-device-details",
+			Namespace: instance.Namespace,
+			Labels: map[string]string{
+				"app": instance.Name + "-redis-device-details",
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			ClusterIP: "None",
+			Type:      corev1.ServiceTypeClusterIP,
+			Selector:  map[string]string{"app": instance.Name + "-redis-device-details"},
+			Ports: []corev1.ServicePort{
+				{
+					Protocol:   corev1.ProtocolTCP,
+					Port:       6379,
+					TargetPort: intstr.FromInt(6379),
+				},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
+		return err
+	}
+
+	found := &corev1.Service{}
+	err := r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
+	if err != nil && errors.IsNotFound(err) {
+		log.Info("Creating device details service", "namespace", svc.Namespace, "name", svc.Name)
+		err = r.Create(context.TODO(), svc)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
 	//storageClassName := "ibmc-vpc-block-retain-general-purpose"
 
 	var pvcSpec corev1.PersistentVolumeClaimSpec
@@ -40,17 +79,17 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 	}
 	statefulSetDeviceDetails := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      podName,
+			Name:      instance.Name + "-redis-device-details",
 			Namespace: instance.Namespace,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			ServiceName: podName,
+			ServiceName: instance.Name + "-redis-device-details",
 			Replicas:    &replicas,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": podName}, // TODO
+				MatchLabels: map[string]string{"app": instance.Name + "-redis-device-details"}, // TODO
 			},
 			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": podName}},
+				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": instance.Name + "-redis-device-details"}},
 				Spec: corev1.PodSpec{
 					Affinity: &corev1.Affinity{
 						PodAntiAffinity: &corev1.PodAntiAffinity{
@@ -64,7 +103,7 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 													Key:      "app",
 													Operator: metav1.LabelSelectorOpIn,
 													Values: []string{
-														podName,
+														instance.Name + "-redis-device-details",
 													},
 												},
 											},
@@ -133,51 +172,10 @@ func (r *ReconcilePlatform) reconcileDeviceDetails(request reconcile.Request, in
 	}
 
 	foundS := &appsv1.StatefulSet{}
-	err := r.Get(context.TODO(), types.NamespacedName{Name: statefulSetDeviceDetails.Name, Namespace: statefulSetDeviceDetails.Namespace}, foundS)
+	err = r.Get(context.TODO(), types.NamespacedName{Name: statefulSetDeviceDetails.Name, Namespace: statefulSetDeviceDetails.Namespace}, foundS)
 	if err != nil && errors.IsNotFound(err) {
 		log.Info("Creating Device Details statefulsSet", "namespace", statefulSetDeviceDetails.Namespace, "name", statefulSetDeviceDetails.Name)
 		err = r.Create(context.TODO(), statefulSetDeviceDetails)
-		if err != nil {
-			return err
-		}
-	} else if err != nil {
-		return err
-	}
-	svc := &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      podName,
-			Namespace: instance.Namespace,
-			Labels: map[string]string{
-				"app": podName,
-			},
-		},
-		Spec: corev1.ServiceSpec{
-			ClusterIP: "None",
-			Type:      corev1.ServiceTypeClusterIP,
-			Selector:  map[string]string{"app": podName},
-			Ports: []corev1.ServicePort{
-				{
-					Protocol:   corev1.ProtocolTCP,
-					Port:       6379,
-					TargetPort: intstr.FromInt(6379),
-				},
-			},
-		},
-	}
-
-	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
-		return err
-	}
-
-	found := &corev1.Service{}
-	err = r.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		log.Info("Creating device details service", "namespace", svc.Namespace, "name", svc.Name)
-		err = r.Create(context.TODO(), svc)
 		if err != nil {
 			return err
 		}

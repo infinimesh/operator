@@ -46,3 +46,5 @@ spec:
         requests:
           storage: "10Gi"
       storageClassName: "infinimesh-standard"
+  controller:
+    redisDeviceDetails: false
