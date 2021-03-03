@@ -23,7 +23,7 @@ func (r *ReconcilePlatform) reconcileHardDeleteNamespace(request reconcile.Reque
 			Namespace: "default",
 		},
 		Spec: v1beta1.CronJobSpec{
-			Schedule:          "0/1 0 * * *",
+			Schedule:          "1 * * * *",
 			ConcurrencyPolicy: v1beta1.ForbidConcurrent,
 			JobTemplate: v1beta1.JobTemplateSpec{
 				Spec: batchv1.JobSpec{
@@ -57,7 +57,7 @@ func (r *ReconcilePlatform) reconcileHardDeleteNamespace(request reconcile.Reque
 										"temptoken=`(curl --location --request POST 'https://'\"$APISERVER_URL\"'/account/token' --header 'Content-Type:application/json' --data-raw '{\"password\":\"'\"$password\"'\",\"username\":\"'\"$username\"'\"}' | sed -n '/ *\"token\":*\"/ { s///; s/\".*//; p; }')`;",
 										"token=`echo \"${temptoken:1}\"`;",
 										"echo $token;",
-										"curl -X DELETE https://api.infinimesh.dev/namespaces/0xeab0/true -H 'Authorization:bearer '\"$token\"'';",
+										"curl -X DELETE https://'\"$APISERVER_URL\"'/namespaces/0xeab0/true -H 'Authorization:bearer '\"$token\"'';",
 										"echo END;",
 									},
 								},
