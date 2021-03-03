@@ -56,7 +56,7 @@ func (r *ReconcilePlatform) reconcileHardDeleteNamespace(request reconcile.Reque
 									},
 									Args: []string{
 
-										"-c", "echo START; echo START; printenv; echo $APISERVER_URL; temptoken=`(curl --location --request POST $APISERVER_URL/account/token --header 'Content-Type:application/json' --data-raw '{\"password\":\"'\"$password\"'\",\"username\":\"'\"$username\"'\"}' | sed -n '/ *\"token\":*\"/ { s///; s/\".*//; p; }')`; token=`echo \"${temptoken:1}\"`; echo $token; curl -X DELETE $APISERVER_URL/namespaces/0xeab0/true -H 'Authorization:bearer '\"$token\"''; echo END;",
+										"-c", "echo START; echo $APISERVER_URL; temptoken=`(curl --location --request POST $APISERVER_URL/account/token --header 'Content-Type:application/json' --data-raw '{\"password\":\"'\"$password\"'\",\"username\":\"'\"$username\"'\"}' | sed -n '/ *\"token\":*\"/ { s///; s/\".*//; p; }')`; token=`echo \"${temptoken:1}\"`; echo $token; curl -X DELETE $APISERVER_URL/namespaces/0xeab0/true -H 'Authorization:bearer '\"$token\"''; echo END;",
 									},
 								},
 							},
