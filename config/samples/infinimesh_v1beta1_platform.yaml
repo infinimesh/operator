@@ -49,6 +49,7 @@ spec:
   controller:
     device_details: false
     apiserver: false
+    apiserver_rest: true
     device_registry: false
     dgraph: false
     frontend: true
