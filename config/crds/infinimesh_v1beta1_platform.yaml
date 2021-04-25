@@ -73,6 +73,10 @@ spec:
                 storage:
                   type: object
               type: object
+            host:
+              properties:
+                registry:
+                  type: string
             dgraph:
               properties:
                 storage:

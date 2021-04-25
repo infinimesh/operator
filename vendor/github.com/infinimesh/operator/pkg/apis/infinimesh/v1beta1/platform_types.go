@@ -36,6 +36,7 @@ type PlatformSpec struct {
 	App                      PlatformApp                      `json:"app,omitempty" protobuf:"bytes,4,name=app"`
 	InfinimeshDefaultStorage PlatformInfinimeshDefaultStorage `json:"infinimeshDefaultStorage,omitempty" protobuf:"bytes,2,name=infinimeshDefaultStorage"`
 	Controller               PlatformController               `json:"controller,omitempty" protobuf:"bytes,13,name=controller"`
+	Host                     PlatformHost                     `json:"host,omitempty" protobuf:"bytes,1,name=host"`
 
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -101,6 +102,9 @@ type PlatformKafka struct {
 
 type PlatformMQTTBroker struct {
 	SecretName string `json:"secretName,omitempty" protobuf:"bytes,1,name=secretName"`
+}
+type PlatformHost struct {
+	Registry string `json:"registry,omitempty" protobuf:"bytes,1,name=registry"`
 }
 
 // PlatformStatus defines the observed state of Platform
