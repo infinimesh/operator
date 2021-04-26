@@ -19,6 +19,8 @@ package platform
 import (
 	"context"
 
+	"net/url"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -140,6 +142,13 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
+	}
+	u, err := url.ParseRequestURI("http://" + instance.Spec.Host.Registry + "/")
+
+	if err != nil {
+		panic(err)
+	} else {
+		logger.Info("Host registry is validated", u)
 	}
 	if instance.Spec.Controller.Dgraph != false {
 		if err := r.reconcileDgraph(request, instance); err != nil {
