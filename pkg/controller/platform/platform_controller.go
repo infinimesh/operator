@@ -144,7 +144,7 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 	u, err := url.ParseRequestURI("http://" + instance.Spec.Host.Registry + "/")
-
+	//commit to build
 	if err != nil {
 		panic(err)
 	} else {
