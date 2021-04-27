@@ -150,6 +150,7 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 	} else {
 		logger.Info("Host registry is validated", u)
 	}
+
 	if instance.Spec.Controller.Dgraph != false {
 		if err := r.reconcileDgraph(request, instance); err != nil {
 			return reconcile.Result{}, err
