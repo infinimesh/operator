@@ -105,6 +105,7 @@ type PlatformMQTTBroker struct {
 }
 type PlatformHost struct {
 	Registry string `json:"registry,omitempty" protobuf:"bytes,1,name=registry"`
+	Repo     string `json:"repo,omitempty" protobuf:"bytes,1,name=repo"`
 }
 
 // PlatformStatus defines the observed state of Platform

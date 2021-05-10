@@ -116,6 +116,8 @@ spec:
               properties:
                 registry:
                   type: string
+                repo:
+                  type: string
               type: object
                 
           type: object

@@ -77,6 +77,8 @@ spec:
               properties:
                 registry:
                   type: string
+                repo:
+                  type: string
             dgraph:
               properties:
                 storage:

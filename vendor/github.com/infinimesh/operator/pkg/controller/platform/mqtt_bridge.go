@@ -37,7 +37,7 @@ func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *i
 					Containers: []corev1.Container{
 						{
 							Name:            "mqtt-bridge",
-							Image:           instance.Spec.Host.Registry + "/infinimesh/mqtt-bridge:infinidev",
+							Image:           instance.Spec.Host.Registry + "/" + instance.Spec.Host.Repo + "/" + "mqtt-bridge:infinidev",
 							ImagePullPolicy: corev1.PullAlways,
 							VolumeMounts: []corev1.VolumeMount{
 								{

@@ -60,3 +60,6 @@ spec:
     reset_root_account_pwd: false
     telemetry-router: false
     twin: false
+  host:
+      registry: quay.io
+      repo: infinimesh

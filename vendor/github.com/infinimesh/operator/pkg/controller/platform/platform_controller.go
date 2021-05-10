@@ -144,12 +144,13 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 	u, err := url.ParseRequestURI("http://" + instance.Spec.Host.Registry + "/")
-
+	//commit to build
 	if err != nil {
 		panic(err)
 	} else {
 		logger.Info("Host registry is validated", u)
 	}
+
 	if instance.Spec.Controller.Dgraph != false {
 		if err := r.reconcileDgraph(request, instance); err != nil {
 			return reconcile.Result{}, err
