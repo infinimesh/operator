@@ -38,7 +38,7 @@ func (r *ReconcilePlatform) reconcileTimeseries(request reconcile.Request, insta
 						Containers: []corev1.Container{
 							{
 								Name:            "timescale-connector",
-								Image:           "quay.io/infinimesh/timescale-connector:latest",
+								Image:           instance.Spec.Host.Registry + "/" + instance.Spec.Host.Repo + "/" + "timescale-connector:latest",
 								ImagePullPolicy: corev1.PullAlways,
 								EnvFrom: []corev1.EnvFromSource{
 									{
@@ -278,7 +278,7 @@ datasources:
 							},
 							{
 								Name:  "proxy",
-								Image: "quay.io/infinimesh/grafana-proxy:latest",
+								Image: instance.Spec.Host.Registry + "/" + instance.Spec.Host.Repo + "/" + "grafana-proxy:latest",
 								Env: []corev1.EnvVar{
 									{
 										Name:  "NODE_HOST",

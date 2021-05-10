@@ -38,7 +38,7 @@ func (r *ReconcilePlatform) reconcileFrontend(request reconcile.Request, instanc
 					Containers: []corev1.Container{
 						{
 							Name:            "frontend",
-							Image:           "quay.io/infinimesh/frontend:infinidev",
+							Image:           instance.Spec.Host.Registry + "/" + instance.Spec.Host.Repo + "/" + "frontend:infinidev",
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{

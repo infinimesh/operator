@@ -39,7 +39,7 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 						Containers: []corev1.Container{
 							{
 								Name:            "shadow-delta-merger",
-								Image:           "quay.io/infinimesh/shadow-delta-merger:latest",
+								Image:           instance.Spec.Host.Registry + "/" + instance.Spec.Host.Repo + "/" + "shadow-delta-merger:latest",
 								ImagePullPolicy: corev1.PullAlways,
 								Env: []corev1.EnvVar{
 									{
@@ -100,7 +100,7 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 						Containers: []corev1.Container{
 							{
 								Name:            "shadow-persister",
-								Image:           "quay.io/infinimesh/shadow-persister:latest",
+								Image:           instance.Spec.Host.Registry + "/" + instance.Spec.Host.Repo + "/" + "shadow-persister:latest",
 								ImagePullPolicy: corev1.PullAlways,
 								Env: []corev1.EnvVar{
 									{
@@ -166,7 +166,7 @@ func (r *ReconcilePlatform) reconcileTwin(request reconcile.Request, instance *i
 						Containers: []corev1.Container{
 							{
 								Name:            "shadow-api",
-								Image:           "quay.io/infinimesh/shadow-api:latest",
+								Image:           instance.Spec.Host.Registry + "/" + instance.Spec.Host.Repo + "/" + "shadow-api:latest",
 								ImagePullPolicy: corev1.PullAlways,
 								Env: []corev1.EnvVar{
 									{

@@ -34,7 +34,7 @@ func (r *ReconcilePlatform) reconcileNodeserver(request reconcile.Request, insta
 					Containers: []corev1.Container{
 						{
 							Name:            "nodeserver",
-							Image:           "quay.io/infinimesh/nodeserver:latest",
+							Image:           instance.Spec.Host.Registry + "/" + instance.Spec.Host.Repo + "/" + "nodeserver:latest",
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{

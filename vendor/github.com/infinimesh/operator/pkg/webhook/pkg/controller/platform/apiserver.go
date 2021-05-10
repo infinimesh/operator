@@ -99,7 +99,7 @@ func (r *ReconcilePlatform) reconcileApiserver(request reconcile.Request, instan
 					Containers: []corev1.Container{
 						{
 							Name:            "apiserver",
-							Image:           "quay.io/infinimesh/apiserver:latest",
+							Image:           instance.Spec.Host.Registry + "/" + instance.Spec.Host.Repo + "/" + "apiserver:latest",
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{
