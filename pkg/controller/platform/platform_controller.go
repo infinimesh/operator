@@ -145,7 +145,7 @@ func (r *ReconcilePlatform) Reconcile(request reconcile.Request) (reconcile.Resu
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-
+	// commit to build
 	if instance.Spec.Controller.Dgraph != false {
 		if err := r.reconcileDgraph(request, instance); err != nil {
 			return reconcile.Result{}, err
