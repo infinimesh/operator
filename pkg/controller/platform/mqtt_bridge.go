@@ -19,7 +19,7 @@ import (
 func (r *ReconcilePlatform) reconcileMqtt(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	log := logger.WithName("mqtt-bridge")
 	deploymentName := instance.Name + "-mqtt-bridge"
-	// TODO(user): Change this to be the object type created by your controller
+	// TODO(user): Change this to be the object type created by the controller
 	// Define the desired Deployment object
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
