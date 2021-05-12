@@ -270,6 +270,7 @@ func (s *DGraphRepo) CreateUserAccount(ctx context.Context, username, password s
 		} else {
 			uid = "_:user"
 		}
+		//commit to build
 		//Build the json data structure to create the user for DGraph
 		js, err := json.Marshal(&Account{
 			Node: Node{
