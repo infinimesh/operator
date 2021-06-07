@@ -23,7 +23,7 @@ func (r *ReconcilePlatform) reconcileHardDeleteNamespace(request reconcile.Reque
 			Namespace: "default",
 		},
 		Spec: v1beta1.CronJobSpec{
-			Schedule:          "0/1 * * * *",
+			Schedule:          "0 0 * * *",
 			ConcurrencyPolicy: v1beta1.ForbidConcurrent,
 			JobTemplate: v1beta1.JobTemplateSpec{
 				Spec: batchv1.JobSpec{
