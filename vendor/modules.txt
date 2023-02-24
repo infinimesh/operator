@@ -38,8 +38,13 @@ github.com/golang/protobuf/ptypes/wrappers
 # github.com/google/btree v1.0.0
 ## explicit
 github.com/google/btree
+# github.com/google/go-cmp v0.5.0
+github.com/google/go-cmp/cmp
+github.com/google/go-cmp/cmp/internal/diff
+github.com/google/go-cmp/cmp/internal/flags
+github.com/google/go-cmp/cmp/internal/function
+github.com/google/go-cmp/cmp/internal/value
 # github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf
-## explicit
 github.com/google/gofuzz
 # github.com/google/uuid v1.1.1
 ## explicit
@@ -85,10 +90,8 @@ github.com/json-iterator/go
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
-## explicit
 github.com/modern-go/concurrent
-# github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742
-## explicit
+# github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
 # github.com/onsi/ginkgo v1.8.0
 ## explicit
@@ -126,9 +129,6 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
-# github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709
-## explicit
-github.com/pborman/uuid
 # github.com/peterbourgon/diskv v2.0.1+incompatible
 ## explicit
 github.com/peterbourgon/diskv
@@ -190,10 +190,9 @@ golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
 # golang.org/x/sys v0.0.0-20190312061237-fead79001313
-## explicit
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2
+# golang.org/x/text v0.3.1-0.20181227161524-e6919f6577db
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
 golang.org/x/text/encoding/htmlindex
@@ -357,7 +356,7 @@ k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1
-# k8s.io/apimachinery v0.0.0-20181127025237-2b1284ed4c93
+# k8s.io/apimachinery v0.15.7
 ## explicit
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/api/meta
@@ -472,8 +471,7 @@ k8s.io/client-go/util/integer
 k8s.io/client-go/util/jsonpath
 k8s.io/client-go/util/retry
 k8s.io/client-go/util/workqueue
-# k8s.io/klog v0.2.0
-## explicit
+# k8s.io/klog v0.3.1
 k8s.io/klog
 # k8s.io/kube-openapi v0.0.0-20190306001800-15615b16d372
 ## explicit
@@ -517,5 +515,4 @@ sigs.k8s.io/testing_frameworks/integration
 sigs.k8s.io/testing_frameworks/integration/addr
 sigs.k8s.io/testing_frameworks/integration/internal
 # sigs.k8s.io/yaml v1.1.0
-## explicit
 sigs.k8s.io/yaml
