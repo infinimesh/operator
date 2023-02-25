@@ -19,7 +19,6 @@ import (
 func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instance *infinimeshv1beta1.Platform) error {
 	log := logger.WithName("device-registry")
 	deploymentName := instance.Name + "-device-registry"
-
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
@@ -41,10 +40,6 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 								{
 									Name:  "DGRAPH_HOST",
 									Value: instance.Name + "-dgraph-alpha:9080", // TODO
-								},
-								{
-									Name:  "DB_ADDR2",
-									Value: instance.Name + "-redis-device-details:6379", // TODO
 								},
 							},
 						},
@@ -97,7 +92,6 @@ func (r *ReconcilePlatform) reconcileRegistry(request reconcile.Request, instanc
 			},
 		},
 	}
-
 	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
 		return err
 	}
